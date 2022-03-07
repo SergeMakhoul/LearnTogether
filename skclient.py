@@ -5,6 +5,9 @@ import numpy as np
 from numpy import ndarray
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
+
+from dataset.create_dataset import create_dataset
 
 
 class Linear(fl.client.NumPyClient):
@@ -65,3 +68,13 @@ class Linear(fl.client.NumPyClient):
             params = (self.model.coef_)
 
         return params
+
+if __name__ == '__main__':
+    X, Y = create_dataset()
+
+    (x_train, x_test, y_train, y_test) = train_test_split(
+        X.to_numpy(), Y.to_numpy(), train_size=0.75)
+
+    client = Linear(x_train, y_train, x_test, y_test)
+
+    fl.client.start_numpy_client('localhost:8080', client=client)
