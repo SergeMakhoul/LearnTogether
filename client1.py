@@ -4,7 +4,7 @@ import pandas as pd
 from model import Linear
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
-from create_dataset import create_dataset
+from dataset.create_dataset import create_dataset
 
 
 # df = pd.read_csv('dataset.csv')

@@ -16,7 +16,7 @@ from sklearn.preprocessing import StandardScaler
 from tensorflow.keras import Sequential
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.layers import Dense, InputLayer
-from create_dataset import create_dataset
+from dataset.create_dataset import create_dataset
 
 
 class TFclient(fl.client.NumPyClient):

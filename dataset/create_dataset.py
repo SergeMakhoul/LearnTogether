@@ -45,13 +45,13 @@ def create_dataset(nb=5,
         scale=np.sqrt(err_dist.rvs())  # error of this player
     ).rvs())
 
-    print(f'X: length = {len(X)}\n{X}\n')
-    print(f'Y: length = {len(Y)}\n{Y}\n')
+    # print(f'X: length = {len(X)}\n{X}\n')
+    # print(f'Y: length = {len(Y)}\n{Y}\n')
 
-    plt.scatter(X, Y)
-    plt.show()
+    # plt.scatter(X, Y)
+    # plt.show()
 
     return (X, Y)
 
 
-create_dataset()
+# create_dataset()

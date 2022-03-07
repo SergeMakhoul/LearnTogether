@@ -3,7 +3,7 @@ from sklearn.model_selection import train_test_split
 from tensorflow.keras import Sequential
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.layers import Dense, InputLayer
-from create_dataset import create_dataset
+from dataset.create_dataset import create_dataset
 
 import flwr as fl
 import numpy as np

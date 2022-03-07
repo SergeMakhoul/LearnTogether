@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
-from create_dataset import create_dataset
+from dataset.create_dataset import create_dataset
 from typing import Dict
 
 
