@@ -1,8 +1,6 @@
 from typing import Dict
 
 import flwr as fl
-import numpy as np
-import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
@@ -17,21 +15,10 @@ def fit_round(rnd: int) -> Dict:
 
 def get_eval_fn(model: LinearRegression):
     """Return an evaluation function for server-side evaluation."""
-
-    # df = pd.read_csv('dataset.csv')
-
-    # Y = df['Y'].to_numpy()
-    # Y = Y.astype('int')
-
-    # X = df['X'].to_numpy()
-    # X = X.reshape(-1, 1)
-
     X, Y = create_dataset()
 
     (x_train, x_test, y_train, y_test) = train_test_split(
         X.to_numpy(), Y.to_numpy(), train_size=0.75)
-
-    (x_train, x_test, y_train, y_test) = train_test_split(X, Y, train_size=0.75)
 
    # The `evaluate` function will be called after every round
     def evaluate(parameters: fl.common.Weights):

@@ -15,12 +15,8 @@ class Linear(fl.client.NumPyClient):
             -> None:
         self.model = LinearRegression()
 
-        self.x_train = x_train
-        self.y_train = y_train
-        self.x_test = x_test
-        self.y_test = y_test
-
-        print(f'{self.x_train},\n{self.y_train},\n{self.x_test},\n{self.y_test}\n')
+        self.x_train, self.y_train = x_train, y_train
+        self.x_test, self.y_test = x_test, y_test
 
         # setting the initial parameter
         n_targets = 1
@@ -68,6 +64,7 @@ class Linear(fl.client.NumPyClient):
             params = (self.model.coef_)
 
         return params
+
 
 if __name__ == '__main__':
     X, Y = create_dataset()
