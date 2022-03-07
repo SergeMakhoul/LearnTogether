@@ -1,8 +1,9 @@
 from typing import Tuple
+
 import numpy as np
 import pandas as pd
-from scipy import stats
 from matplotlib import pyplot as plt
+from scipy import stats
 
 # means_dist_1 = stats.norm(loc=0, scale=1)
 # variance_dist = stats.beta(a=8, b=2, scale=50/4)
@@ -24,7 +25,7 @@ def create_dataset(nb=5,
       - draws_dist: distribution to draw Y from: with mean*X as mean and variance epsilon^2
 
     Returns:
-        Tuple of pandas dataframes representing X and Y
+        Tuple of dataframes representing X and Y
     """
 
     # x_cov = [[1.0, 0.0], [0.0, 1.0]]

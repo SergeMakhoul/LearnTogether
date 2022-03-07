@@ -1,11 +1,10 @@
 import flwr as fl
 import pandas as pd
-
-from model import Linear
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
-from dataset.create_dataset import create_dataset
 
+from dataset.create_dataset import create_dataset
+from model import Linear
 
 # df = pd.read_csv('dataset.csv')
 
