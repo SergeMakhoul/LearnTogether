@@ -1,13 +1,12 @@
-from typing import Any, Callable, Dict, List, Optional, Tuple
-from sklearn.model_selection import train_test_split
-from tensorflow.keras import Sequential
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.layers import Dense, InputLayer
-from dataset.create_dataset import create_dataset
+from typing import Dict, Optional, Tuple
 
 import flwr as fl
-import numpy as np
 import tensorflow as tf
+from sklearn.model_selection import train_test_split
+from tensorflow.python.keras import Sequential
+from tensorflow.python.keras.layers import Dense, InputLayer
+
+from dataset.create_dataset import create_dataset
 
 
 def get_eval_fn(model):
@@ -16,7 +15,7 @@ def get_eval_fn(model):
     # Load data and model here to avoid the overhead of doing it in `evaluate` itself
     X, Y = create_dataset(nb=20)
     (x_train, x_test, y_train, y_test) = train_test_split(
-        np.array(X), np.array(Y[0]), train_size=0.75)
+        X.to_numpy(), Y.to_numpy(), train_size=0.75)
 
     # The `evaluate` function will be called after every round
     def evaluate(
@@ -60,8 +59,8 @@ if __name__ == "__main__":
         Dense(1)
     ])
     model.compile(
-        optimizer=tf.optimizers.Adam(learning_rate=0.01),
-        loss='mean_squared_error', metrics=['categorical_accuracy'])
+        optimizer=tf.optimizers.SGD(learning_rate=0.01),
+        loss='mean_squared_error')
 
     # Create strategy
     strategy = fl.server.strategy.FedAvg(
@@ -78,5 +77,6 @@ if __name__ == "__main__":
     )
 
     # Start Flower server for four rounds of federated learning
-    fl.server.start_server("localhost:8080", config={
-                           "num_rounds": 3}, strategy=strategy)
+    fl.server.start_server("localhost:8080",
+                           config={"num_rounds": 3},
+                           strategy=strategy)
