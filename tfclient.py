@@ -7,6 +7,7 @@ import tensorflow as tf
 from numpy import ndarray
 from sklearn.model_selection import train_test_split
 from tensorflow.python.keras import Sequential
+from tensorflow.python.keras.optimizers import gradient_descent_v2
 from tensorflow.python.keras.callbacks import EarlyStopping
 from tensorflow.python.keras.layers import Dense, InputLayer
 
@@ -22,7 +23,7 @@ class TFclient(fl.client.NumPyClient):
         ])
 
         self.model.compile(
-            optimizer=tf.optimizers.SGD(learning_rate=0.01),
+            optimizer=gradient_descent_v2.SGD(learning_rate=0.01),
             loss='mean_squared_error')
 
         self.x_train, self.y_train = x_train, y_train
@@ -78,12 +79,12 @@ class TFclient(fl.client.NumPyClient):
             steps = 5
 
         # Evaluate global model parameters on the local test data and return results
-        loss, accuracy = self.model.evaluate(
+        loss = self.model.evaluate(
             self.x_test, self.y_test, 32, steps=steps)
 
         num_examples_test = len(self.x_test)
 
-        return loss, num_examples_test, {"accuracy": accuracy}
+        return loss, num_examples_test, {}
 
     def get_parameters(self):
         raise Exception(
@@ -91,9 +92,9 @@ class TFclient(fl.client.NumPyClient):
 
 
 if __name__ == '__main__':
-    X, Y = create_dataset(nb=5)
+    X, Y = create_dataset(nb=100)
     (x_train, x_test, y_train, y_test) = train_test_split(
-        np.array(X), np.array(Y[0]), train_size=0.75)
+        X.to_numpy(), Y.to_numpy(), train_size=0.75)
 
     client = TFclient(x_train, y_train, x_test, y_test)
     fl.client.start_numpy_client("localhost:8080", client=client)

@@ -4,6 +4,7 @@ import flwr as fl
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from tensorflow.python.keras import Sequential
+from tensorflow.python.keras.optimizers import gradient_descent_v2
 from tensorflow.python.keras.layers import Dense, InputLayer
 
 from dataset.create_dataset import create_dataset
@@ -22,8 +23,8 @@ def get_eval_fn(model):
         weights: fl.common.Weights,
     ) -> Optional[Tuple[float, Dict[str, fl.common.Scalar]]]:
         model.set_weights(weights)
-        loss, accuracy = model.evaluate(x_test, y_test)
-        return loss, {'accuracy': accuracy}
+        loss = model.evaluate(x_test, y_test)
+        return loss, {}
 
     return evaluate
 
@@ -35,7 +36,8 @@ def fit_config(rnd: int):
     """
     config = {
         "batch_size": 32,
-        "local_epochs": 1 if rnd < 2 else 2,
+        # "local_epochs": 1 if rnd < 2 else 2,
+        "local_epochs": 10,
     }
     return config
 
@@ -59,7 +61,7 @@ if __name__ == "__main__":
         Dense(1)
     ])
     model.compile(
-        optimizer=tf.optimizers.SGD(learning_rate=0.01),
+        optimizer=gradient_descent_v2.SGD(learning_rate=0.01),
         loss='mean_squared_error')
 
     # Create strategy
@@ -78,5 +80,5 @@ if __name__ == "__main__":
 
     # Start Flower server for four rounds of federated learning
     fl.server.start_server("localhost:8080",
-                           config={"num_rounds": 3},
+                           config={"num_rounds": 7},
                            strategy=strategy)
