@@ -36,8 +36,8 @@ def fit_config(rnd: int):
     """
     config = {
         "batch_size": 32,
-        # "local_epochs": 1 if rnd < 2 else 2,
-        "local_epochs": 10,
+        "local_epochs": 1 if rnd < 2 else 2,
+        # "local_epochs": 10,
     }
     return config
 
@@ -68,10 +68,10 @@ if __name__ == "__main__":
     strategy = fl.server.strategy.FedAvg(
         fraction_fit=0.3,
         fraction_eval=0.2,
-        min_fit_clients=2,
-        # min_eval_clients=2,
-        min_available_clients=2,
-        eval_fn=get_eval_fn(model),
+        min_fit_clients=3,
+        min_eval_clients=3,
+        min_available_clients=10,
+        # eval_fn=get_eval_fn(model),
         on_fit_config_fn=fit_config,
         on_evaluate_config_fn=evaluate_config,
         initial_parameters=fl.common.weights_to_parameters(

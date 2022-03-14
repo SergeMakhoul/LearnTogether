@@ -1,8 +1,10 @@
 import textwrap
+import sys
 from typing import Dict, Tuple, Union
 
 import flwr as fl
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 from numpy import ndarray
 from sklearn.model_selection import train_test_split
@@ -80,7 +82,7 @@ class TFclient(fl.client.NumPyClient):
 
         # Evaluate global model parameters on the local test data and return results
         loss = self.model.evaluate(
-            self.x_test, self.y_test, 32, steps=steps)
+            self.x_test, self.y_test, len(self.x_test) // steps, steps=steps)
 
         num_examples_test = len(self.x_test)
 
@@ -92,7 +94,17 @@ class TFclient(fl.client.NumPyClient):
 
 
 if __name__ == '__main__':
-    X, Y = create_dataset(nb=100)
+    try:
+        n = int(sys.argv[1])
+        data = pd.read_csv('dataset/dataset.csv')[100*(n-1): 100*n]
+    except IndexError or ValueError:
+        data = pd.read_csv('dataset/dataset.csv').sample(100)
+
+    # X, Y = create_dataset()
+
+    X = data['X']
+    Y = data['Y']
+
     (x_train, x_test, y_train, y_test) = train_test_split(
         X.to_numpy(), Y.to_numpy(), train_size=0.75)
 
