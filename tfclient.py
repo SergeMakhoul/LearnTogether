@@ -94,10 +94,10 @@ class TFclient(fl.client.NumPyClient):
 
 
 if __name__ == '__main__':
-    try:
+    if len(sys.argv) > 1:
         n = int(sys.argv[1])
         data = pd.read_csv('dataset/dataset.csv')[100*(n-1): 100*n]
-    except IndexError or ValueError:
+    else:
         data = pd.read_csv('dataset/dataset.csv').sample(100)
 
     # X, Y = create_dataset()
