@@ -1,3 +1,4 @@
+import textwrap
 from time import perf_counter
 
 import matplotlib.pyplot as plt
@@ -24,11 +25,11 @@ class LinearRegression():
         # To store the training time
         self.training_time = 0
 
-    def linreg(self, x):
+    def __linreg(self, x):
         y = self.weight * x + self.bias
         return y
 
-    def squared_error(self, y_pred, y_true):
+    def __squared_error(self, y_pred, y_true):
         return tf.reduce_mean(tf.square(y_pred - y_true))
 
     def fit(self):
@@ -36,8 +37,8 @@ class LinearRegression():
         for epoch in range(self.training_epochs):
             # Compute loss within Gradient Tape context
             with tf.GradientTape() as tape:
-                y_predicted = self.linreg(self.x_train)
-                loss = self.squared_error(y_predicted, self.y_train)
+                y_predicted = self.__linreg(self.x_train)
+                loss = self.__squared_error(y_predicted, self.y_train)
 
                 # Get gradients
                 gradients = tape.gradient(loss, [self.weight, self.bias])
@@ -59,5 +60,23 @@ class LinearRegression():
 
     def plot(self):
         plt.scatter(self.x_train, self.y_train)
-        plt.plot(self.x_train, self.linreg(self.x_train), 'r')
+        plt.plot(self.x_train, self.__linreg(self.x_train), 'r')
         plt.show()
+
+    def __str__(self):
+        return(textwrap.dedent(f"""
+        **********
+
+        Weights of the model: {self.get_weights()}
+
+        Training time: {self.get_training_time()}
+
+        **********
+        """))
+
+
+if __name__ == '__main__':
+    lr = LinearRegression()
+    lr.fit()
+    print(lr)
+    # lr.plot()
