@@ -1,5 +1,9 @@
 #!/bin/bash
 
+echo "Running benchmark simple linear regression code"
+python lr.py > output/benchmark.txt &
+wait
+
 echo "Starting server"
 python tfserver.py > output/server.txt &
 sleep 5
