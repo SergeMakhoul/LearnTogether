@@ -2,7 +2,8 @@ import os
 import pickle
 from typing import Dict, List
 
-import tensorflow as tf
+from tensorflow.python.keras.models import load_model
+from tensorflow.python.keras import Model
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
@@ -26,14 +27,14 @@ def save_history(name: str, history: Dict):
         pickle.dump(data, f)
 
 
-def evaluate_model(x, y):
+def evaluate_models(x, y) -> dict:
     directory = 'models'
 
     dict = {}
 
     for file in os.listdir(directory):
         path = os.path.join(directory, file)
-        model = tf.keras.models.load_model(path)
+        model: Model = load_model(path)
         dict[file] = model.evaluate(x, y)
 
-    print(dict)
+    return dict
