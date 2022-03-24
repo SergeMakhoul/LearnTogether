@@ -1,23 +1,23 @@
 #!/bin/bash
 
-echo "Running benchmark simple linear regression code"
-python lr.py > output/benchmark.txt &
-wait
+# echo "Running benchmark simple linear regression code"
+# python lr.py > output/benchmark.txt &
+# wait
 
 echo "Starting server"
-python tfserver.py > output/server.txt &
+python tfserver.py &
 sleep 5
 
-if [[ $1 != '' && $1 > 10 ]]
+if [[ $1 != '' && $1 -gt 0 ]]
 then
-    nb=$(($1-1))
+    nb=$1
 else
-    nb=9
+    nb=2
 fi
 
-for i in `seq 0 ${nb}`; do
+for i in `seq 0 $(($nb - 1))`; do
     echo "Starting client $i"
-    python tfclient.py > output/client$i.txt &
+    python tfclient.py $i > output/client$i.txt &
 done
 
 trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM
