@@ -8,7 +8,17 @@ from tensorflow.python.keras import Model
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
-def save_history(name: str, history: Dict):
+def save_history(name: str, history: Dict) -> None:
+    '''
+    Saves a given history dictionary in the simulation directory
+    by appending it to a list using pickle.
+
+    Arguments:
+      - name: name of the file
+      - history: dictionary to save
+
+    Returns none
+    '''
     path: str = f'simulation/{name}'
     data: List[Dict] = []
 
@@ -28,6 +38,17 @@ def save_history(name: str, history: Dict):
 
 
 def evaluate_models(x, y) -> dict:
+    '''
+    Runs through all of the models saved in the models directory
+    and evaluates them using the given x and y and saves the results
+    in a dictionary for comparison.
+
+    Arguments:
+      - x: input data to compare
+      - y: output data to compare
+
+    Returns a dictionary with the name of the model as key and the evaluation as value
+    '''
     directory = 'models'
 
     dict = {}
