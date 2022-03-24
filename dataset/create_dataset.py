@@ -1,18 +1,12 @@
-from typing import Tuple
-
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
 from scipy import stats
-
-# means_dist_1 = stats.norm(loc=0, scale=1)
-# variance_dist = stats.beta(a=8, b=2, scale=50/4)
 
 
 def create_dataset(nb=5,
                    err_dist=stats.beta(a=8, b=2, scale=50/4),
                    means_dist=stats.norm(loc=0, scale=1),
-                   draws_dist=stats.norm):
+                   draws_dist=stats.norm,):
     """
     Creates a linear regression dataset based on a mean distribution and on an error distribution.
     X values are drawn from the player's distribution and Y is noisily drawn following:
@@ -28,29 +22,20 @@ def create_dataset(nb=5,
         Tuple of dataframes representing X and Y
     """
 
-    # x_cov = [[1.0, 0.0], [0.0, 1.0]]
-    # D = len(x_cov)
-    # mean_x = np.array([0] * D)
-    # x_dist = stats.multivariate_normal(mean=mean_x, cov=x_cov)
-
-    # means = pd.DataFrame([dist.rvs() for dist in params_dists]).T
-    # X = pd.DataFrame(x_dist.rvs(nb))
-
     means = pd.DataFrame([means_dist.rvs()])
     X = pd.DataFrame(means_dist.rvs(nb))
 
     # The location (loc) keyword specifies the mean.
     # The scale (scale) keyword specifies the standard deviation.
+    # Y = pd.DataFrame(draws_dist(
+    #     loc=X.dot(means),  # mean of this player
+    #     scale=np.sqrt(err_dist.rvs())  # error of this player
+    # ).rvs())
+
     Y = pd.DataFrame(draws_dist(
-        loc=X.dot(means),  # mean of this player
-        scale=np.sqrt(err_dist.rvs())  # error of this player
+        loc=X*90,  # mean of this player
+        scale=4  # error of this player
     ).rvs())
-
-    # print(f'X: length = {len(X)}\n{X}\n')
-    # print(f'Y: length = {len(Y)}\n{Y}\n')
-
-    # plt.scatter(X, Y)
-    # plt.show()
 
     return (X, Y)
 
