@@ -1,5 +1,7 @@
-import textwrap
+import json
+import os
 import sys
+import textwrap
 from typing import Dict, Tuple, Union
 
 import flwr as fl
@@ -7,17 +9,21 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from numpy import ndarray
+from scipy import stats
 from sklearn.model_selection import train_test_split
 from tensorflow.python.keras import Sequential
-from tensorflow.python.keras.optimizers import gradient_descent_v2
 from tensorflow.python.keras.callbacks import EarlyStopping
 from tensorflow.python.keras.layers import Dense, InputLayer
+from tensorflow.python.keras.optimizers import gradient_descent_v2
 
 from dataset.create_dataset import create_dataset
+from utils import save_history
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
 class TFclient(fl.client.NumPyClient):
-    def __init__(self, x_train: ndarray, y_train: ndarray, x_test: ndarray, y_test: ndarray)\
+    def __init__(self, x_train: ndarray, y_train: ndarray, x_test: ndarray, y_test: ndarray, num: int = 0)\
             -> None:
         self.model = Sequential([
             InputLayer(input_shape=(1,)),
@@ -25,11 +31,16 @@ class TFclient(fl.client.NumPyClient):
         ])
 
         self.model.compile(
-            optimizer=gradient_descent_v2.SGD(learning_rate=0.01),
+            optimizer=gradient_descent_v2.SGD(learning_rate=0.1),
             loss='mean_squared_error')
 
         self.x_train, self.y_train = x_train, y_train
         self.x_test, self.y_test = x_test, y_test
+        self.name = f'client{num}'
+        self.history = {'loss': [], 'val_loss': [], 'weights': []}
+
+    def __save_history(self):
+        save_history(self.name, self.history)
 
     def fit(self, parameters, config: Dict[str, Union[bool, bytes, float, int, str]])\
             -> Union[Tuple[any, any or float], int, Dict]:
@@ -43,13 +54,14 @@ class TFclient(fl.client.NumPyClient):
         history = self.model.fit(
             self.x_train,
             self.y_train,
-            batch_size,
             epochs,
             validation_split=0.1,
             callbacks=[EarlyStopping(patience=5, restore_best_weights=True)]
         )
 
-        parameters_prime = self.model.get_weights()
+        self.model.save(f'models/model_{self.name}.h5')
+
+        parameters_prime: list[ndarray] = self.model.get_weights()
 
         print(textwrap.dedent(f"""
             ****************
@@ -61,14 +73,20 @@ class TFclient(fl.client.NumPyClient):
             ****************
         """))
 
-        num_examples_train = len(self.x_train)
-
         results = {
             "loss": history.history["loss"][0],
             "val_loss": history.history["val_loss"][0],
         }
 
-        return parameters_prime, num_examples_train, results
+        self.history['loss'].extend(history.history['loss'])
+        self.history['val_loss'].extend(history.history['val_loss'])
+        self.history['weights'].append(
+            [parameters_prime[0].tolist(), parameters_prime[1].tolist()])
+
+        if config['final_round']:
+            self.__save_history()
+
+        return parameters_prime, len(self.x_train), results
 
     def evaluate(self, parameters, config: Dict[str, Union[bool, bytes, float, int, str]])\
             -> Union[tuple or any, int, Dict[str, float or any or tuple]]:
@@ -94,19 +112,18 @@ class TFclient(fl.client.NumPyClient):
 
 
 if __name__ == '__main__':
+    n = 0
     if len(sys.argv) > 1:
         n = int(sys.argv[1])
-        data = pd.read_csv('dataset/dataset.csv')[100*(n-1): 100*n]
+        print(n)
+        data = pd.read_csv(f'dataset/dataset{n}.csv')
+        X = data['X']
+        Y = data['Y']
     else:
-        data = pd.read_csv('dataset/dataset.csv').sample(100)
-
-    # X, Y = create_dataset()
-
-    X = data['X']
-    Y = data['Y']
+        X, Y = create_dataset(100)
 
     (x_train, x_test, y_train, y_test) = train_test_split(
-        X.to_numpy(), Y.to_numpy(), train_size=0.75)
+        X.to_numpy(), Y.to_numpy(), train_size=0.8)
 
-    client = TFclient(x_train, y_train, x_test, y_test)
+    client = TFclient(x_train, y_train, x_test, y_test, n)
     fl.client.start_numpy_client("localhost:8080", client=client)
