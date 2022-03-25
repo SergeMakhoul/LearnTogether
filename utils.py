@@ -2,8 +2,10 @@ import os
 import pickle
 from typing import Dict, List
 
-from tensorflow.python.keras.models import load_model
+import pandas as pd
+from scipy import stats
 from tensorflow.python.keras import Model
+from tensorflow.python.keras.models import load_model
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
@@ -37,7 +39,38 @@ def save_history(name: str, history: Dict) -> None:
         pickle.dump(data, f)
 
 
-def evaluate_models(x, y) -> dict:
+def average_simulation() -> Dict:
+    '''
+    Averages all the simulations in the simulation directory.
+
+    Returns a dictionary of the average values.
+    '''
+    directory: str = 'simulation'
+
+    average: Dict = {"loss": [], "val_loss": []}
+
+    for file in os.listdir(directory):
+        with open(os.path.join(directory, file), 'rb') as data_file:
+            data = pickle.load(data_file)
+
+        length = len(data)
+
+        for iteration in data:
+            for key, value in iteration.items():
+                if key not in average.keys():
+                    continue
+
+                if len(average[key]) == 0:
+                    for i in average.keys():
+                        average[i] = [0 for _ in range(len(value))]
+
+                for i in range(len(value)):
+                    average[key][i] += value[i] / length
+
+    return average
+
+
+def evaluate_models(x, y) -> Dict:
     '''
     Runs through all of the models saved in the models directory
     and evaluates them using the given x and y and saves the results
@@ -59,3 +92,32 @@ def evaluate_models(x, y) -> dict:
         dict[file] = model.evaluate(x, y)
 
     return dict
+
+
+def create_dataset(nb=10,
+                   err_dist=stats.beta(a=8, b=2, scale=50/4),
+                   means_dist=stats.norm(loc=0, scale=1),
+                   draws_dist=stats.norm,):
+    """
+    Creates a linear regression dataset based on a mean distribution and on an error distribution.
+    X values are drawn from the player's distribution and Y is noisily drawn following:
+        Y[j] ~ D[j](XT[j] teta[j] , epsilon**2[j]) where j is the player
+
+    Arguments:
+      - nb: number of data in the dataset
+      - err_dist: distribution to draw error parameters from (err = epsilon**2) (scalar)
+      - means_dist: distribution to draw X from
+      - draws_dist: distribution to draw Y from: with mean*X as mean and variance epsilon^2
+
+    Returns:
+        Tuple of dataframes representing X and Y
+    """
+
+    X = pd.DataFrame(means_dist.rvs(nb))
+
+    Y = pd.DataFrame(draws_dist(
+        loc=X*90,  # mean (μ)
+        scale=4  # standard deviation (σ)
+    ).rvs())
+
+    return (X, Y)
