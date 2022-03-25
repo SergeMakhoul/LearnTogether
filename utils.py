@@ -97,7 +97,9 @@ def evaluate_models(x, y) -> Dict:
 def create_dataset(nb=10,
                    err_dist=stats.beta(a=8, b=2, scale=50/4),
                    means_dist=stats.norm(loc=0, scale=1),
-                   draws_dist=stats.norm,):
+                   draws_dist=stats.norm,
+                   mean=90,
+                   standard_deviation=2):
     """
     Creates a linear regression dataset based on a mean distribution and on an error distribution.
     X values are drawn from the player's distribution and Y is noisily drawn following:
@@ -116,8 +118,8 @@ def create_dataset(nb=10,
     X = pd.DataFrame(means_dist.rvs(nb))
 
     Y = pd.DataFrame(draws_dist(
-        loc=X*90,  # mean (μ)
-        scale=4  # standard deviation (σ)
+        loc=X*mean,  # mean (μ)
+        scale=standard_deviation  # standard deviation (σ)
     ).rvs())
 
     return (X, Y)

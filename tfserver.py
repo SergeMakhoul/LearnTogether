@@ -1,3 +1,4 @@
+import json
 import os
 from typing import Dict, Optional, Tuple
 
@@ -37,7 +38,7 @@ def fit_config(rnd: int):
         "batch_size": 32,
         # "local_epochs": 2 if rnd < 2 else 5,
         "local_epochs": 1,
-        "final_round": True if rnd == num else False
+        "final_round": True if rnd == number_of_rounds else False
     }
     return config
 
@@ -53,6 +54,9 @@ def evaluate_config(rnd: int):
 
 
 if __name__ == "__main__":
+    with open("config.json", "r") as f:
+        config = json.load(f)
+
     # Load and compile model for
     # 1. server-side parameter initialization
     # 2. server-side parameter evaluation
@@ -61,7 +65,8 @@ if __name__ == "__main__":
         Dense(1)
     ])
     model.compile(
-        optimizer=gradient_descent_v2.SGD(learning_rate=0.04),
+        optimizer=gradient_descent_v2.SGD(
+            learning_rate=config["model"]["learning_rate"]),
         loss='mean_squared_error')
 
     # Create strategy
@@ -78,9 +83,9 @@ if __name__ == "__main__":
             model.get_weights()),
     )
 
-    num = 50
+    number_of_rounds = config["server"]["number_of_rounds"]
 
     # Start Flower server for four rounds of federated learning
     fl.server.start_server("localhost:8080",
-                           config={"num_rounds": num},
+                           config={"num_rounds": number_of_rounds},
                            strategy=strategy)

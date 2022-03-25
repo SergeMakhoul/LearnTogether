@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 import textwrap
@@ -26,7 +27,8 @@ class TFclient(fl.client.NumPyClient):
         ])
 
         self.model.compile(
-            optimizer=gradient_descent_v2.SGD(learning_rate=0.04),
+            optimizer=gradient_descent_v2.SGD(
+                learning_rate=config['model']['learning_rate']),
             loss='mean_squared_error')
 
         self.x_train, self.y_train = x_train, y_train
@@ -107,6 +109,9 @@ class TFclient(fl.client.NumPyClient):
 
 
 if __name__ == '__main__':
+    with open('config.json', 'r') as f:
+        config = json.load(f)
+
     n = 0
     if len(sys.argv) > 1:
         n = int(sys.argv[1])
