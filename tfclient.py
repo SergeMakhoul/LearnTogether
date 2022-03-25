@@ -1,23 +1,18 @@
-import json
 import os
 import sys
 import textwrap
 from typing import Dict, Tuple, Union
 
 import flwr as fl
-import numpy as np
 import pandas as pd
-import tensorflow as tf
 from numpy import ndarray
-from scipy import stats
 from sklearn.model_selection import train_test_split
 from tensorflow.python.keras import Sequential
 from tensorflow.python.keras.callbacks import EarlyStopping
 from tensorflow.python.keras.layers import Dense, InputLayer
 from tensorflow.python.keras.optimizers import gradient_descent_v2
 
-from dataset.create_dataset import create_dataset
-from utils import save_history
+from utils import create_dataset, save_history
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
@@ -31,7 +26,7 @@ class TFclient(fl.client.NumPyClient):
         ])
 
         self.model.compile(
-            optimizer=gradient_descent_v2.SGD(learning_rate=0.1),
+            optimizer=gradient_descent_v2.SGD(learning_rate=0.04),
             loss='mean_squared_error')
 
         self.x_train, self.y_train = x_train, y_train

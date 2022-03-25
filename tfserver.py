@@ -2,13 +2,11 @@ import os
 from typing import Dict, Optional, Tuple
 
 import flwr as fl
-import tensorflow as tf
-from sklearn.model_selection import train_test_split
 from tensorflow.python.keras import Sequential
 from tensorflow.python.keras.layers import Dense, InputLayer
 from tensorflow.python.keras.optimizers import gradient_descent_v2
 
-from dataset.create_dataset import create_dataset
+from utils import create_dataset
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
@@ -63,7 +61,7 @@ if __name__ == "__main__":
         Dense(1)
     ])
     model.compile(
-        optimizer=gradient_descent_v2.SGD(learning_rate=0.1),
+        optimizer=gradient_descent_v2.SGD(learning_rate=0.04),
         loss='mean_squared_error')
 
     # Create strategy
@@ -80,7 +78,7 @@ if __name__ == "__main__":
             model.get_weights()),
     )
 
-    num = 10
+    num = 50
 
     # Start Flower server for four rounds of federated learning
     fl.server.start_server("localhost:8080",
