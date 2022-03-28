@@ -33,8 +33,14 @@ class TFclient(fl.client.NumPyClient):
 
         self.x_train, self.y_train = x_train, y_train
         self.x_test, self.y_test = x_test, y_test
+
         self.name = f'client{num}'
-        self.history = {'loss': [], 'val_loss': [], 'weights': []}
+
+        self.history = {
+            'loss': [],
+            'val_loss': [],
+            'weights': []
+        }
 
     def __save_history(self):
         save_history(self.name, self.history)
