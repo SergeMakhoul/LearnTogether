@@ -73,10 +73,10 @@ if __name__ == "__main__":
     strategy = fl.server.strategy.FedAvg(
         # fraction_fit=0.3,
         # fraction_eval=0.2,
-        # min_fit_clients=5,
-        # min_eval_clients=3,
-        # min_available_clients=5,
         # eval_fn=get_eval_fn(model),
+        min_available_clients=config["server"]["strategy"]["min_available_clients"],
+        min_fit_clients=config["server"]["strategy"]["min_fit_clients"],
+        min_eval_clients=config["server"]["strategy"]["min_eval_clients"],
         on_fit_config_fn=fit_config,
         on_evaluate_config_fn=evaluate_config,
         initial_parameters=fl.common.weights_to_parameters(
