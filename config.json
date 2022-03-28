@@ -1,6 +1,6 @@
 {
   "model": {
-    "learning_rate": 0.1
+    "learning_rate": 0.07
   },
   "data": {
     "number_of_samples": 10,
@@ -8,10 +8,11 @@
     "standard_deviation": 2
   },
   "server": {
-    "number_of_rounds": 10,
+    "number_of_rounds": 20,
     "strategy": {
-      "min_fit_clients": 2,
-      "min_available_clients": 2
+      "min_available_clients": 1,
+      "min_eval_clients": 1,
+      "min_fit_clients": 1
     }
   }
 }
