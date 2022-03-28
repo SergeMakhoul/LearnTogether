@@ -1,3 +1,4 @@
+import json
 import os
 import pickle
 from typing import Dict, List
@@ -47,7 +48,12 @@ def average_simulation() -> Dict:
     '''
     directory: str = 'simulation'
 
-    average: Dict = {"loss": [], "val_loss": []}
+    average: Dict = {"learning_rate": 0, "loss": [], "val_loss": []}
+
+    with open('config.json', 'r') as f:
+        config = json.load(f)
+
+    average['learning_rate'] = config['model']['learning_rate']
 
     for file in os.listdir(directory):
         with open(os.path.join(directory, file), 'rb') as data_file:
