@@ -157,3 +157,6 @@ output/*
 simulation/*
 simulation_server/*
 tests_average/*
+
+# fiddling notebook
+a.ipynb
