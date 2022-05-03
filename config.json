@@ -4,15 +4,20 @@
   },
   "data": {
     "number_of_samples": 10,
-    "mean": 10,
-    "standard_deviation": 2
+    "mu": 10,
+    "sigma": 2
   },
   "server": {
-    "number_of_rounds": 20,
+    "number_of_rounds": 10,
     "strategy": {
-      "min_available_clients": 1,
-      "min_eval_clients": 1,
-      "min_fit_clients": 1
+      "fraction_fit": 1,
+      "fraction_eval": 1,
+      "min_available_clients": 5,
+      "min_eval_clients": 5,
+      "min_fit_clients": 5
+    },
+    "fit_config": {
+      "local_epochs": 10
     }
   }
 }
