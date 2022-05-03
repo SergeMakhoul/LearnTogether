@@ -158,6 +158,8 @@ simulation/*
 simulation_server/*
 tests_average/*
 
+!.gitkeep
+
 # random testing files
 a.ipynb
 a.sh
