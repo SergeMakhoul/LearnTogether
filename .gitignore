@@ -151,9 +151,9 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-dataset/dataset?*.csv
-dataset/eval.csv
-models/
-output/
-simulation/
-tests_average/
+dataset/*
+models/*
+output/*
+simulation/*
+simulation_server/*
+tests_average/*
