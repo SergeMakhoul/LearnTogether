@@ -17,6 +17,7 @@ fi
 
 for i in `seq 0 $(($nb - 1))`; do
     echo "Starting client $i"
+    mkdir output >/dev/null 2>&1
     python tfclient.py $i > output/client$i.txt &
     # python tfclient.py $i > /dev/null &
 done
