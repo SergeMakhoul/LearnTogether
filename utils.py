@@ -1,9 +1,10 @@
-import json
 import os
 import pickle
 from typing import Dict, List
 
+import numpy as np
 import pandas as pd
+from numpy import sqrt
 from scipy import stats
 from tensorflow.python.keras import Model
 from tensorflow.python.keras.models import load_model
@@ -11,7 +12,7 @@ from tensorflow.python.keras.models import load_model
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
-def save_history(name: str, history: Dict) -> None:
+def save_history(name: str, history: Dict, directory: str = 'simulation') -> None:
     '''
     Saves a given history dictionary in the simulation directory
     by appending it to a list using pickle.
@@ -22,7 +23,7 @@ def save_history(name: str, history: Dict) -> None:
 
     Returns none
     '''
-    path: str = f'simulation/{name}'
+    path: str = f'{directory}/{name}'
     data: List[Dict] = []
 
     if not os.path.exists(path):
@@ -40,22 +41,24 @@ def save_history(name: str, history: Dict) -> None:
         pickle.dump(data, f)
 
 
-def average_simulation() -> Dict:
+def average_simulation(directory: str = 'simulation') -> Dict:
     '''
     Averages all the simulations in the simulation directory.
 
+    Arguments:
+      - directory: directory to search in for the simulation results
+
     Returns a dictionary of the average values.
     '''
-    directory: str = 'simulation'
 
-    average: Dict = {"learning_rate": 0, "loss": [], "val_loss": []}
+    average: Dict = {
+        "loss": [],
+        # "val_loss": []
+    }
 
-    with open('config.json', 'r') as f:
-        config = json.load(f)
+    d = os.listdir(directory)
 
-    average['learning_rate'] = config['model']['learning_rate']
-
-    for file in os.listdir(directory):
+    for file in d:
         with open(os.path.join(directory, file), 'rb') as data_file:
             data = pickle.load(data_file)
 
@@ -70,10 +73,52 @@ def average_simulation() -> Dict:
                     for i in average.keys():
                         average[i] = [0 for _ in range(len(value))]
 
+                # print(len(value))
+
                 for i in range(len(value)):
-                    average[key][i] += value[i] / length
+                    average[key][i] += value[i] / (length * len(d))
 
     return average
+
+
+def average_one(client: str, directory: str = 'simulation') -> Dict:
+    '''
+    Averages all the simulations for one given player in the simulation directory.
+
+    Arguments:
+      - client: the client to average
+      - directory: directory to search in for the simulation results
+
+    Returns a dictionary of the average values.
+    '''
+
+    average: Dict = {
+        "loss": [],
+        # "val_loss": []
+    }
+
+    with open(os.path.join(directory, client), 'rb') as data_file:
+        data = pickle.load(data_file)
+
+    length = len(data)
+
+    for iteration in data:
+        for key, value in iteration.items():
+            if key not in average.keys():
+                continue
+
+            if len(average[key]) == 0:
+                for i in average.keys():
+                    average[i] = [0 for _ in range(len(value))]
+
+            for i in range(len(value)):
+                average[key][i] += value[i] / (length)
+
+    return average
+
+
+def average_server():
+    return average_one('server', 'simulation_server')
 
 
 def evaluate_models(x, y) -> Dict:
@@ -100,13 +145,8 @@ def evaluate_models(x, y) -> Dict:
     return dict
 
 
-def create_dataset(nb=10,
-                   err_dist=stats.beta(a=8, b=2, scale=50/4),
-                   means_dist=stats.norm(loc=0, scale=1),
-                   draws_dist=stats.norm,
-                   mean=90,
-                   standard_deviation=2):
-    """
+def create_dataset(nb=10, mu=10, sigma=1):
+    '''
     Creates a linear regression dataset based on a mean distribution and on an error distribution.
     X values are drawn from the player's distribution and Y is noisily drawn following:
         Y[j] ~ D[j](XT[j] teta[j] , epsilon**2[j]) where j is the player
@@ -119,13 +159,30 @@ def create_dataset(nb=10,
 
     Returns:
         Tuple of dataframes representing X and Y
-    """
+    '''
 
-    X = pd.DataFrame(means_dist.rvs(nb))
+    means_dist_1 = stats.norm(loc=0, scale=1)
+    means_dist_2 = stats.norm(loc=3, scale=2)
 
-    Y = pd.DataFrame(draws_dist(
-        loc=X*mean,  # mean (μ)
-        scale=standard_deviation  # standard deviation (σ)
-    ).rvs())
+    params_dists = [means_dist_1, means_dist_2]
+
+    means = pd.DataFrame([dist.rvs() for dist in params_dists]).T
+
+    variance_dist = stats.beta(a=8, b=2, scale=(50/4)*(mu/10))
+
+    X = pd.DataFrame(stats.multivariate_normal(
+        mean=np.array([0] * 2), cov=[[1.0, 0.0], [0.0, 1.0]]).rvs(nb))
+
+    Y = pd.DataFrame([stats.norm(
+        X.dot(means.iloc[0])[j],
+        # sqrt(variance_dist.rvs())
+        sqrt(mu)
+    ).rvs() for j in range(nb)])
 
     return (X, Y)
+
+
+if __name__ == '__main__':
+    # x, y = create_dataset(nb=10, mu=10)
+    # print(x, y, sep='\n\n')
+    print(average_server())
