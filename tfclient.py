@@ -22,7 +22,7 @@ class TFclient(fl.client.NumPyClient):
     def __init__(self, x_train: ndarray, y_train: ndarray, x_test: ndarray, y_test: ndarray, num: int = 0)\
             -> None:
         self.model = Sequential([
-            InputLayer(input_shape=(1,)),
+            InputLayer(input_shape=(2,)),
             Dense(1)
         ])
 
@@ -57,32 +57,33 @@ class TFclient(fl.client.NumPyClient):
         history = self.model.fit(
             self.x_train,
             self.y_train,
-            epochs,
-            validation_split=0.1,
-            callbacks=[EarlyStopping(patience=5, restore_best_weights=True)]
+            epochs=epochs,
+            validation_split=0,
+            # callbacks=[EarlyStopping(
+            #     monitor='loss', patience=5, restore_best_weights=True)]
         )
 
-        self.model.save(f'models/model_{self.name}.h5')
+        # self.model.save(f'models/model_{self.name}.h5')
 
         parameters_prime: list[ndarray] = self.model.get_weights()
 
-        print(textwrap.dedent(f"""
-            ****************
+        # print(textwrap.dedent(f"""
+        #     ****************
 
-            {parameters_prime}
+        #     {parameters_prime}
 
-            {history.history}
+        #     {history.history}
 
-            ****************
-        """))
+        #     ****************
+        # """))
 
         results = {
             "loss": history.history["loss"][0],
-            "val_loss": history.history["val_loss"][0],
+            # "val_loss": history.history["val_loss"][0],
         }
 
         self.history['loss'].extend(history.history['loss'])
-        self.history['val_loss'].extend(history.history['val_loss'])
+        # self.history['val_loss'].extend(history.history['val_loss'])
         self.history['weights'].append(
             [parameters_prime[0].tolist(), parameters_prime[1].tolist()])
 
@@ -123,8 +124,12 @@ if __name__ == '__main__':
         n = int(sys.argv[1])
         print(n)
         data = pd.read_csv(f'dataset/dataset{n}.csv')
-        X = data['X']
+        data = data.drop(data.columns[[0]], axis=1)
+        data = data.drop(0)
         Y = data['Y']
+        X = data.drop('Y', axis=1)
+        print(X)
+        print(Y)
     else:
         X, Y = create_dataset(100)
 
