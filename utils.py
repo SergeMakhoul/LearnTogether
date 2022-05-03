@@ -56,7 +56,11 @@ def average_simulation(directory: str = 'simulation') -> Dict:
         # "val_loss": []
     }
 
-    d = os.listdir(directory)
+    try:
+        d = os.listdir(directory)
+    except:
+        os.mkdir(directory)
+        d = os.listdir(directory)
 
     for file in d:
         with open(os.path.join(directory, file), 'rb') as data_file:
@@ -97,6 +101,9 @@ def average_one(client: str, directory: str = 'simulation') -> Dict:
         # "val_loss": []
     }
 
+    if not os.path.exists(directory):
+        os.mkdir(directory)
+
     with open(os.path.join(directory, client), 'rb') as data_file:
         data = pickle.load(data_file)
 
@@ -136,6 +143,9 @@ def evaluate_models(x, y) -> Dict:
     directory = 'models'
 
     dict = {}
+
+    if not os.path.exists(directory):
+        raise "Wrong Directory"
 
     for file in os.listdir(directory):
         path = os.path.join(directory, file)
