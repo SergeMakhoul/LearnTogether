@@ -158,5 +158,6 @@ simulation/*
 simulation_server/*
 tests_average/*
 
-# fiddling notebook
+# random testing files
 a.ipynb
+a.sh
