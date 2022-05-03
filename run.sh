@@ -6,7 +6,7 @@
 
 echo "Starting server"
 python tfserver.py &
-sleep 5
+# sleep 5
 
 if [[ $1 != '' && $1 -gt 0 ]]
 then
@@ -18,6 +18,7 @@ fi
 for i in `seq 0 $(($nb - 1))`; do
     echo "Starting client $i"
     python tfclient.py $i > output/client$i.txt &
+    # python tfclient.py $i > /dev/null &
 done
 
 trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM
