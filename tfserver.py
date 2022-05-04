@@ -67,7 +67,8 @@ def fit_config(rnd: int):
 
 
 def evaluate_config(rnd: int):
-    '''Return evaluation configuration dict for each round.
+    '''
+    Return evaluation configuration dict for each round.
     Perform five local evaluation steps on each client (i.e., use five
     batches) during rounds one to three, then increase to ten local
     evaluation steps.
