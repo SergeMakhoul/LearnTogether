@@ -4,9 +4,12 @@ from typing import Dict, Optional, Tuple
 
 import flwr as fl
 import pandas as pd
+from flwr.common import Weights
 from flwr.server.client_manager import SimpleClientManager
 from flwr.server.server import Server
-from tensorflow.python.keras import Sequential
+from flwr.server.strategy import FedAvg
+from tensorflow.python.keras import Model, Sequential
+from tensorflow.python.keras.initializers import initializers_v2
 from tensorflow.python.keras.layers import Dense, InputLayer
 from tensorflow.python.keras.optimizers import gradient_descent_v2
 
@@ -15,7 +18,7 @@ from utils import create_dataset, save_history
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 
-def get_eval_fn(model, server=None):
+def get_eval_fn(model: Model, server: Server = None):
     '''
     Return an evaluation function for server-side evaluation.
     '''
@@ -31,7 +34,7 @@ def get_eval_fn(model, server=None):
 
     # The `evaluate` function will be called after every round
     def evaluate(
-        weights: fl.common.Weights,
+        weights: Weights,
     ) -> Optional[Tuple[float, Dict[str, fl.common.Scalar]]]:
         model.set_weights(weights)
         loss = model.evaluate(X, Y)
@@ -86,21 +89,19 @@ if __name__ == '__main__':
     #    2. server-side parameter evaluation
     model = Sequential([
         InputLayer(input_shape=(2,)),
-        Dense(1)
+        Dense(units=1, kernel_initializer=initializers_v2.Zeros())
     ])
     model.compile(
         optimizer=gradient_descent_v2.SGD(
             learning_rate=config['model']['learning_rate']
         ),
-        loss='mean_squared_error')
+        loss='mean_squared_error'
+    )
 
-    # Create strategy
     strat_config = config['server']['strategy']
 
-    # client_manager = SimpleClientManager()
-    # server = Server(client_manager=client_manager)
-
-    strategy = fl.server.strategy.FedAvg(
+    # Create strategy
+    strategy = FedAvg(
         eval_fn=get_eval_fn(model),
         fraction_fit=strat_config['fraction_fit'],
         fraction_eval=strat_config['fraction_eval'],
@@ -112,9 +113,6 @@ if __name__ == '__main__':
         initial_parameters=fl.common.weights_to_parameters(
             model.get_weights()),
     )
-
-    # server.set_strategy(strategy)
-    # print(server)
 
     number_of_rounds = config['server']['number_of_rounds']
 
