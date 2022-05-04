@@ -12,25 +12,22 @@ from tensorflow.python.keras.optimizers import gradient_descent_v2
 
 from utils import create_dataset, save_history
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 
 def get_eval_fn(model, server=None):
-    """Return an evaluation function for server-side evaluation."""
+    '''
+    Return an evaluation function for server-side evaluation.
+    '''
 
     # Load data and model here to avoid the overhead of doing it in `evaluate` itself
-    # X, Y = create_dataset(
-    #     nb=config["data"]["number_of_samples"],
-    #     mu=config["data"]["mu"]
-    # )
     data = pd.read_csv(f'dataset/server.csv')
     data = data.drop(data.columns[[0]], axis=1)
     data = data.drop(0)
     Y = data['Y']
     X = data.drop('Y', axis=1)
-    avr = {"loss": []}
+    avr = {'loss': []}
     rnd = [0]
-    # l = [0]
 
     # The `evaluate` function will be called after every round
     def evaluate(
@@ -39,16 +36,11 @@ def get_eval_fn(model, server=None):
         model.set_weights(weights)
         loss = model.evaluate(X, Y)
 
-        avr["loss"].append(loss)
+        avr['loss'].append(loss)
 
         rnd[0] += 1
         if rnd[0] == number_of_rounds:
             save_history('server', avr, 'simulation_server')
-
-        # if abs(loss - l[0]) < 1:
-        #     server.disconnect_all_clients()
-
-        # l[0] = loss
 
         return loss, {}
 
@@ -56,66 +48,67 @@ def get_eval_fn(model, server=None):
 
 
 def fit_config(rnd: int):
-    """Return training configuration dict for each round.
+    '''
+    Return training configuration dict for each round.
     Keep batch size fixed at 32, perform two rounds of training with one
     local epoch, increase to two local epochs afterwards.
-    """
+    '''
+
     fit_config = {
-        "batch_size": 32,
-        # "local_epochs": 2 if rnd < 2 else 5,
-        "local_epochs": config["server"]["fit_config"]["local_epochs"],
-        "final_round": True if rnd == number_of_rounds else False
+        'batch_size': 32,
+        'local_epochs': config['server']['fit_config']['local_epochs'],
+        'final_round': True if rnd == number_of_rounds else False
     }
+
     return fit_config
 
 
 def evaluate_config(rnd: int):
-    """Return evaluation configuration dict for each round.
+    '''Return evaluation configuration dict for each round.
     Perform five local evaluation steps on each client (i.e., use five
     batches) during rounds one to three, then increase to ten local
     evaluation steps.
-    """
+    '''
+
     val_steps = {
-        "val_steps": 1
+        'val_steps': 1
     }
+
     return val_steps
 
 
-if __name__ == "__main__":
-    with open("config.json", "r") as f:
+if __name__ == '__main__':
+    with open('config.json', 'r') as f:
         config = json.load(f)
 
     # Load and compile model for
-    # 1. server-side parameter initialization
-    # 2. server-side parameter evaluation
+    #    1. server-side parameter initialization
+    #    2. server-side parameter evaluation
     model = Sequential([
         InputLayer(input_shape=(2,)),
         Dense(1)
     ])
     model.compile(
         optimizer=gradient_descent_v2.SGD(
-            learning_rate=config["model"]["learning_rate"]),
-        loss="mean_squared_error")
+            learning_rate=config['model']['learning_rate']
+        ),
+        loss='mean_squared_error')
 
     # Create strategy
-    strat_config = config["server"]["strategy"]
+    strat_config = config['server']['strategy']
 
     # client_manager = SimpleClientManager()
     # server = Server(client_manager=client_manager)
 
     strategy = fl.server.strategy.FedAvg(
         eval_fn=get_eval_fn(model),
-
-        fraction_fit=strat_config["fraction_fit"],
-        fraction_eval=strat_config["fraction_eval"],
-
-        min_available_clients=strat_config["min_available_clients"],
-        min_fit_clients=strat_config["min_fit_clients"],
-        min_eval_clients=strat_config["min_eval_clients"],
-
+        fraction_fit=strat_config['fraction_fit'],
+        fraction_eval=strat_config['fraction_eval'],
+        min_available_clients=strat_config['min_available_clients'],
+        min_fit_clients=strat_config['min_fit_clients'],
+        min_eval_clients=strat_config['min_eval_clients'],
         on_fit_config_fn=fit_config,
         on_evaluate_config_fn=evaluate_config,
-
         initial_parameters=fl.common.weights_to_parameters(
             model.get_weights()),
     )
@@ -123,9 +116,9 @@ if __name__ == "__main__":
     # server.set_strategy(strategy)
     # print(server)
 
-    number_of_rounds = config["server"]["number_of_rounds"]
+    number_of_rounds = config['server']['number_of_rounds']
 
     # Start Flower server for four rounds of federated learning
-    fl.server.start_server("localhost:8080",
-                           config={"num_rounds": number_of_rounds},
+    fl.server.start_server('localhost:8080',
+                           config={'num_rounds': number_of_rounds},
                            strategy=strategy)

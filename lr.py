@@ -50,7 +50,7 @@ class LinearRegression():
                 self.bias.assign_sub(gradients[1]*self.learning_rate)
 
                 # Print output
-                print(f"Epoch count {epoch}: Loss value: {loss.numpy()}")
+                print(f'Epoch count {epoch}: Loss value: {loss.numpy()}')
 
         self.training_time = perf_counter() - t_start
 
@@ -66,7 +66,7 @@ class LinearRegression():
         plt.show()
 
     def __str__(self):
-        return(textwrap.dedent(f"""
+        return(textwrap.dedent(f'''
         **********
 
         Weights of the model: {self.get_weights()}
@@ -74,7 +74,7 @@ class LinearRegression():
         Training time: {self.get_training_time()}
 
         **********
-        """))
+        '''))
 
 
 if __name__ == '__main__':

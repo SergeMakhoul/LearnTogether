@@ -9,7 +9,7 @@ from scipy import stats
 from tensorflow.python.keras import Model
 from tensorflow.python.keras.models import load_model
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 
 def save_history(name: str, history: Dict, directory: str = 'simulation') -> None:
@@ -52,8 +52,8 @@ def average_simulation(directory: str = 'simulation') -> Dict:
     '''
 
     average: Dict = {
-        "loss": [],
-        # "val_loss": []
+        'loss': [],
+        # 'val_loss': []
     }
 
     try:
@@ -97,8 +97,8 @@ def average_one(client: str, directory: str = 'simulation') -> Dict:
     '''
 
     average: Dict = {
-        "loss": [],
-        # "val_loss": []
+        'loss': [],
+        # 'val_loss': []
     }
 
     if not os.path.exists(directory):
@@ -145,7 +145,7 @@ def evaluate_models(x, y) -> Dict:
     dict = {}
 
     if not os.path.exists(directory):
-        raise "Wrong Directory"
+        raise 'Wrong Directory'
 
     for file in os.listdir(directory):
         path = os.path.join(directory, file)

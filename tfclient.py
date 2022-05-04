@@ -15,12 +15,11 @@ from tensorflow.python.keras.optimizers import gradient_descent_v2
 
 from utils import create_dataset, save_history
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 
 class TFclient(fl.client.NumPyClient):
-    def __init__(self, x_train: ndarray, y_train: ndarray, x_test: ndarray, y_test: ndarray, num: int = 0)\
-            -> None:
+    def __init__(self, x_train: ndarray, y_train: ndarray, x_test: ndarray, y_test: ndarray, num: int = 0) -> None:
         self.model = Sequential([
             InputLayer(input_shape=(2,)),
             Dense(1)
@@ -28,7 +27,8 @@ class TFclient(fl.client.NumPyClient):
 
         self.model.compile(
             optimizer=gradient_descent_v2.SGD(
-                learning_rate=config['model']['learning_rate']),
+                learning_rate=config['model']['learning_rate']
+            ),
             loss='mean_squared_error')
 
         self.x_train, self.y_train = x_train, y_train
@@ -49,9 +49,9 @@ class TFclient(fl.client.NumPyClient):
             -> Union[Tuple[any, any or float], int, Dict]:
         self.model.set_weights(parameters)
 
-        batch_size: int = config["batch_size"] if 'batch_size' in config.keys(
+        batch_size: int = config['batch_size'] if 'batch_size' in config.keys(
         ) else 32
-        epochs: int = config["local_epochs"] if 'local_epochs' in config.keys(
+        epochs: int = config['local_epochs'] if 'local_epochs' in config.keys(
         ) else 1
 
         history = self.model.fit(
@@ -67,7 +67,7 @@ class TFclient(fl.client.NumPyClient):
 
         parameters_prime: list[ndarray] = self.model.get_weights()
 
-        # print(textwrap.dedent(f"""
+        # print(textwrap.dedent(f'''
         #     ****************
 
         #     {parameters_prime}
@@ -75,11 +75,11 @@ class TFclient(fl.client.NumPyClient):
         #     {history.history}
 
         #     ****************
-        # """))
+        # '''))
 
         results = {
-            "loss": history.history["loss"][0],
-            # "val_loss": history.history["val_loss"][0],
+            'loss': history.history['loss'][0],
+            # 'val_loss': history.history['val_loss'][0],
         }
 
         self.history['loss'].extend(history.history['loss'])
@@ -98,7 +98,7 @@ class TFclient(fl.client.NumPyClient):
 
         # Get config values
         if 'val_steps' in config.keys():
-            steps: int = config["val_steps"]
+            steps: int = config['val_steps']
         else:
             steps = 5
 
@@ -112,7 +112,7 @@ class TFclient(fl.client.NumPyClient):
 
     def get_parameters(self):
         raise Exception(
-            "Not implemented (server-side parameter initialization)")
+            'Not implemented (server-side parameter initialization)')
 
 
 if __name__ == '__main__':
@@ -137,4 +137,4 @@ if __name__ == '__main__':
         X.to_numpy(), Y.to_numpy(), train_size=0.8)
 
     client = TFclient(x_train, y_train, x_test, y_test, n)
-    fl.client.start_numpy_client("localhost:8080", client=client)
+    fl.client.start_numpy_client('localhost:8080', client=client)
