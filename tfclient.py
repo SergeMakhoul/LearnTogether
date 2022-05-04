@@ -19,7 +19,14 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 
 class TFclient(fl.client.NumPyClient):
-    def __init__(self, x_train: ndarray, y_train: ndarray, x_test: ndarray, y_test: ndarray, num: int = 0) -> None:
+    def __init__(
+            self,
+            x_train: ndarray,
+            y_train: ndarray,
+            x_test: ndarray = None,
+            y_test: ndarray = None,
+            num: int = 0
+    ) -> None:
         self.model = Sequential([
             InputLayer(input_shape=(2,)),
             Dense(1)
@@ -96,6 +103,9 @@ class TFclient(fl.client.NumPyClient):
             -> Union[tuple or any, int, Dict[str, float or any or tuple]]:
         self.model.set_weights(parameters)
 
+        if not self.x_test or not self.y_test:
+            raise Exception('Test variables are undefined or incomplete.')
+
         # Get config values
         if 'val_steps' in config.keys():
             steps: int = config['val_steps']
@@ -133,8 +143,8 @@ if __name__ == '__main__':
     else:
         X, Y = create_dataset(100)
 
-    (x_train, x_test, y_train, y_test) = train_test_split(
-        X.to_numpy(), Y.to_numpy(), train_size=0.8)
+    # (x_train, x_test, y_train, y_test) = train_test_split(
+    #     X.to_numpy(), Y.to_numpy(), train_size=0.8)
 
-    client = TFclient(x_train, y_train, x_test, y_test, n)
+    client = TFclient(X.to_numpy(), Y.to_numpy(), num=n)
     fl.client.start_numpy_client('localhost:8080', client=client)
