@@ -56,13 +56,15 @@ def average_simulation(directory: str = 'simulation') -> Dict:
         # 'val_loss': []
     }
 
-    try:
-        d = os.listdir(directory)
-    except:
+    if not os.path.exists(directory):
         os.mkdir(directory)
-        d = os.listdir(directory)
+
+    d = [i for i in os.listdir(directory) if not i.startswith('.')]
 
     for file in d:
+        if file[0] == '.':
+            continue
+
         with open(os.path.join(directory, file), 'rb') as data_file:
             data = pickle.load(data_file)
 
@@ -76,8 +78,6 @@ def average_simulation(directory: str = 'simulation') -> Dict:
                 if len(average[key]) == 0:
                     for i in average.keys():
                         average[i] = [0 for _ in range(len(value))]
-
-                # print(len(value))
 
                 for i in range(len(value)):
                     average[key][i] += value[i] / (length * len(d))
@@ -125,7 +125,7 @@ def average_one(client: str, directory: str = 'simulation') -> Dict:
 
 
 def average_server():
-    return average_one('server', 'simulation_server')
+    return average_one(client='server', directory='simulation_server')
 
 
 def evaluate_models(x, y) -> Dict:
