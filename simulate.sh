@@ -15,10 +15,10 @@ else
 fi
 
 echo 'clearing old outputs...'
-rm ./output/*
-rm ./models/*
-rm ./simulation/*
-rm ./simulation_server/*
+rm ./output/* >/dev/null 2>&1
+rm ./models/* >/dev/null 2>&1
+rm ./simulation/* >/dev/null 2>&1
+rm ./simulation_server/* >/dev/null 2>&1
 
 for i in `seq 1 $nb`; do
     echo 'clearing old dataset...'
@@ -30,8 +30,10 @@ for i in `seq 1 $nb`; do
     for f in simulation/*; do if [[ "$f" =~ client[[:digit:]]$ ]]; then mv "$f" "$f-$i"; fi; done
 
     echo 'running simulation...'
-    for j in `seq 1 10`; do
-        bash ./run.sh $nb_clients
-        wait
-    done
+    # for j in `seq 1 10`; do
+    #     bash ./run.sh $nb_clients
+    #     wait
+    # done
+    bash ./run.sh $nb_clients
+    wait
 done
