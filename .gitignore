@@ -152,10 +152,13 @@ cython_debug/
 #.idea/
 
 dataset/*
+dataset_history/*
 models/*
 output/*
 simulation/*
+simulation_history/*
 simulation_server/*
+simulation_server_history/*
 tests_average/*
 
 !.gitkeep
