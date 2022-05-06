@@ -22,26 +22,28 @@ rm ./models/* >/dev/null 2>&1
 # rm ./simulation/* >/dev/null 2>&1
 # rm ./simulation_server/* >/dev/null 2>&1
 
-# Getting the number of simulations already done
-num_simulations=`ls ./simulation_history | wc -l`
-# Creating the string for the directory extension to use
-sim=simulation$(($num_simulations+1))
+if ((`ls ./simulation | wc -l` != 0)); then
+    # Getting the number of simulations already done
+    num_simulations=`ls ./simulation_history | wc -l`
+    # Creating the string for the directory extension to use
+    sim=simulation$(($num_simulations+1))
 
-echo '[INFO] Simulate | Moving client simulation into history'
-mkdir ./simulation_history/$sim
-mv ./simulation/* ./simulation_history/$sim
-
-echo '[INFO] Simulate | Moving server simulation into history'
-mkdir ./simulation_server_history/$sim
-mv ./simulation_server/* ./simulation_server_history/$sim
-
-for i in `seq 1 $nb`; do
-    # echo '[INFO] Simulate | Clearing old dataset'
-    # rm ./dataset/*
-    echo '[INFO] Simulate | Moving old dataset'
+    echo '[INFO] Simulate | Creating history directories'
+    mkdir ./simulation_history/$sim
+    mkdir ./simulation_server_history/$sim
     mkdir ./dataset_history/$sim
-    mv ./dataset/* ./dataset_history/$sim
 
+    echo '[INFO] Simulate | Moving client simulation'
+    mv ./simulation/* ./simulation_history/$sim
+
+    echo '[INFO] Simulate | Moving server simulation'
+    mv ./simulation_server/* ./simulation_server_history/$sim
+
+    echo '[INFO] Simulate | Moving dataset'
+    mv ./dataset/* ./dataset_history/$sim
+fi;
+
+# for i in `seq 1 $nb`; do
     echo '[INFO] Simulate | Creating new dataset'
     python dataset.py $nb_clients
 
@@ -52,4 +54,4 @@ for i in `seq 1 $nb`; do
     #     bash ./run.sh $nb_clients
     # done
     bash ./run.sh $nb_clients
-done
+# done
