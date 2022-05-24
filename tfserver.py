@@ -37,7 +37,8 @@ def get_eval_fn(model: Model, server: Server = None):
         weights: Weights,
     ) -> Optional[Tuple[float, Dict[str, fl.common.Scalar]]]:
         model.set_weights(weights)
-        loss = model.evaluate(X, Y)
+        loss = model.evaluate(
+            X, Y) + (config['cost'] * (strat_config['min_available_clients'] - 1))
 
         avr['loss'].append(loss)
 
@@ -89,7 +90,7 @@ if __name__ == '__main__':
     #    1. server-side parameter initialization
     #    2. server-side parameter evaluation
     model = Sequential([
-        InputLayer(input_shape=(2,)),
+        InputLayer(input_shape=(1,)),
         Dense(units=1, kernel_initializer=initializers_v2.Zeros())
     ])
     model.compile(
