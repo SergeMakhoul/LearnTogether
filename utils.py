@@ -2,7 +2,6 @@ import os
 import pickle
 from typing import Dict, List
 
-import numpy as np
 import pandas as pd
 from numpy import sqrt
 from scipy import stats
@@ -10,35 +9,6 @@ from tensorflow.python.keras import Model
 from tensorflow.python.keras.models import load_model
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-
-
-def save_history(name: str, history: Dict, directory: str = 'simulation') -> None:
-    '''
-    Saves a given history dictionary in the simulation directory
-    by appending it to a list using pickle.
-
-    Arguments:
-      - name: name of the file
-      - history: dictionary to save
-
-    Returns none
-    '''
-    path: str = f'{directory}/{name}'
-    data: List[Dict] = []
-
-    if not os.path.exists(path):
-        with open(path, 'wb+') as f:
-            data.append(history)
-            pickle.dump(data, f)
-        return
-
-    with open(path, 'rb') as f:
-        data = pickle.load(f)
-
-    data.append(history)
-
-    with open(path, 'wb') as f:
-        pickle.dump(data, f)
 
 
 def average_simulation(directory: str = 'simulation') -> Dict:
@@ -53,7 +23,6 @@ def average_simulation(directory: str = 'simulation') -> Dict:
 
     average: Dict = {
         'loss': [],
-        # 'val_loss': []
     }
 
     if not os.path.exists(directory):
@@ -98,7 +67,6 @@ def average_one(client: str, directory: str = 'simulation') -> Dict:
 
     average: Dict = {
         'loss': [],
-        # 'val_loss': []
     }
 
     if not os.path.exists(directory):
@@ -128,6 +96,53 @@ def average_server():
     return average_one(client='server', directory='simulation_server')
 
 
+def create_dataset(nb=10, mu=10, sigma=1):
+    '''
+    Creates a linear regression dataset based on a mean distribution and on an error distribution.
+    X values are drawn from the player's distribution and Y is noisily drawn following:
+        Y[j] ~ D[j](XT[j] teta[j] , epsilon**2[j]) where j is the player
+
+    Arguments:
+      - nb: number of data in the dataset
+      - mu: mean of the label, μ = E(ε^2)
+      - sigma: sigma squared is the variance of theta, σ^2 = var(ϴ)
+
+    Returns:
+        Tuple of dataframes representing X and Y
+    '''
+
+    # means_dist_1 = stats.norm(loc=0, scale=1)
+    # means_dist_2 = stats.norm(loc=3, scale=2)
+
+    # params_dists = [means_dist_1, means_dist_2]
+
+    means_dist = stats.norm(loc=0, scale=sigma)
+
+    # means = pd.DataFrame([dist.rvs() for dist in params_dists]).T
+    means = pd.DataFrame([means_dist.rvs()]).T
+
+    variance_dist = stats.beta(a=8, b=2, scale=(50/4)*(mu/10))
+
+    # X = pd.DataFrame(stats.multivariate_normal(
+    #     mean=np.array([0] * 2), cov=[[1.0, 0.0], [0.0, 1.0]]).rvs(nb))
+
+    X = pd.DataFrame(stats.norm(loc=0, scale=1).rvs(nb))
+
+    # Y = pd.DataFrame([stats.norm(
+    #     X.dot(means.iloc[0])[j],
+    #     # sqrt(variance_dist.rvs())
+    #     sqrt(mu)
+    # ).rvs() for j in range(nb)])
+
+    Y = pd.DataFrame([stats.norm(
+        X.dot(means).iloc[j],
+        # sqrt(variance_dist.rvs())
+        sqrt(mu)
+    ).rvs() for j in range(nb)])
+
+    return (X, Y)
+
+
 def evaluate_models(x, y) -> Dict:
     '''
     Runs through all of the models saved in the models directory
@@ -155,44 +170,36 @@ def evaluate_models(x, y) -> Dict:
     return dict
 
 
-def create_dataset(nb=10, mu=10, sigma=1):
+def save_history(name: str, history: Dict, directory: str = 'simulation') -> None:
     '''
-    Creates a linear regression dataset based on a mean distribution and on an error distribution.
-    X values are drawn from the player's distribution and Y is noisily drawn following:
-        Y[j] ~ D[j](XT[j] teta[j] , epsilon**2[j]) where j is the player
+    Saves a given history dictionary in the simulation directory
+    by appending it to a list using pickle.
 
     Arguments:
-      - nb: number of data in the dataset
-      - err_dist: distribution to draw error parameters from (err = epsilon**2) (scalar)
-      - means_dist: distribution to draw X from
-      - draws_dist: distribution to draw Y from: with mean*X as mean and variance epsilon^2
+      - name: name of the file
+      - history: dictionary to save
 
-    Returns:
-        Tuple of dataframes representing X and Y
+    Returns none
     '''
+    path: str = f'{directory}/{name}'
+    data: List[Dict] = []
 
-    means_dist_1 = stats.norm(loc=0, scale=1)
-    means_dist_2 = stats.norm(loc=3, scale=2)
+    if not os.path.exists(path):
+        with open(path, 'wb+') as f:
+            data.append(history)
+            pickle.dump(data, f)
+        return
 
-    params_dists = [means_dist_1, means_dist_2]
+    with open(path, 'rb') as f:
+        data = pickle.load(f)
 
-    means = pd.DataFrame([dist.rvs() for dist in params_dists]).T
+    data.append(history)
 
-    variance_dist = stats.beta(a=8, b=2, scale=(50/4)*(mu/10))
-
-    X = pd.DataFrame(stats.multivariate_normal(
-        mean=np.array([0] * 2), cov=[[1.0, 0.0], [0.0, 1.0]]).rvs(nb))
-
-    Y = pd.DataFrame([stats.norm(
-        X.dot(means.iloc[0])[j],
-        # sqrt(variance_dist.rvs())
-        sqrt(mu)
-    ).rvs() for j in range(nb)])
-
-    return (X, Y)
+    with open(path, 'wb') as f:
+        pickle.dump(data, f)
 
 
 if __name__ == '__main__':
     # x, y = create_dataset(nb=10, mu=10)
     # print(x, y, sep='\n\n')
-    print(average_server())
+    average_simulation()
