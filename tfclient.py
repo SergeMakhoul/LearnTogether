@@ -28,7 +28,7 @@ class TFclient(fl.client.NumPyClient):
             num: int = 0
     ) -> None:
         self.model = Sequential([
-            InputLayer(input_shape=(2,)),
+            InputLayer(input_shape=(1,)),
             Dense(1)
         ])
 
@@ -62,10 +62,9 @@ class TFclient(fl.client.NumPyClient):
         ) else 1
 
         history = self.model.fit(
-            self.x_train,
-            self.y_train,
+            x=self.x_train,
+            y=self.y_train,
             epochs=epochs,
-            validation_split=0,
             # callbacks=[EarlyStopping(
             #     monitor='loss', patience=5, restore_best_weights=True)]
         )
@@ -96,6 +95,8 @@ class TFclient(fl.client.NumPyClient):
 
         if config['final_round']:
             self.__save_history()
+
+        # TODO see how to evaluate and save it
 
         return parameters_prime, len(self.x_train), results
 
