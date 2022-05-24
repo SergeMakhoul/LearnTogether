@@ -3,3 +3,16 @@ see how theta changes
 try to use true theta as weight
 
 see how to store theta
+
+#########
+
+do an evaluation on the client side on the evaluation dataset
+
+#########
+
+get the shape of the loss - reference pic on phone
+
+#########
+
+fix dev change rounds
+fix rounds change dev
