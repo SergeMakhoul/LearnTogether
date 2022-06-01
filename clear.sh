@@ -9,7 +9,5 @@ rm -r \
     ./output/* \
     ./simulation/* \
     ./simulation_history/* \
-    ./simulation_server/* \
-    ./simulation_server_history/* \
     ./tests_average/* \
 >/dev/null 2>&1
