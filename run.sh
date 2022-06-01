@@ -14,7 +14,7 @@ for i in `seq 0 $(($nb - 1))`; do
 done
 
 echo "[INFO] Run | Starting server"
-python tfserver.py &
+python tfserver.py > /dev/null &
 
 trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM
 wait

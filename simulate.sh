@@ -14,9 +14,11 @@ else
     nb_clients=3
 fi
 
-sim_num=`ls ./simulation_history | wc -l`
-if (($sim_num != 0)); then
-    mkdir ./archive/simulation_$(($sim_num+1))
+fs=`ls ./simulation_history | wc -l`
+if (($fs != 0)); then
+    sim_num=$((`ls ./archive | wc -l`+1))
+    mkdir ./archive/simulation_$sim_num
+    mv ./simulation_history/* ./archive/simulation_$sim_num
 fi;
 
 for i in `seq 1 $nb`; do
