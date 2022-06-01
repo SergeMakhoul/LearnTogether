@@ -3,6 +3,7 @@ import os
 from typing import Dict, Optional, Tuple
 
 import flwr as fl
+import numpy as np
 import pandas as pd
 from flwr.common import Weights
 from flwr.server.client_manager import SimpleClientManager
@@ -37,14 +38,21 @@ def get_eval_fn(model: Model, server: Server = None):
         weights: Weights,
     ) -> Optional[Tuple[float, Dict[str, fl.common.Scalar]]]:
         model.set_weights(weights)
-        loss = model.evaluate(
-            X, Y) + (config['cost'] * (strat_config['min_available_clients'] - 1))
+        loss = model.evaluate(X, Y)\
+            + ((config['data']['mu'] / (config['data']['number_of_samples'] - 2)
+                - (config['data']['mu'] / (config['data']['number_of_samples'] -
+                   2) - config['data']['sigma'] ** 2) / config['cost_function']['T']
+                - config['data']['sigma'] ** 2) / np.exp(2 * config['cost_function']['lambda'] * config['cost_function']['s'] * config['cost_function']['T']))\
+            * np.exp(2 * config['cost_function']['lambda'] * config['cost_function']['s'] * strat_config['min_available_clients'])
+
+        # loss = model.evaluate(
+        #     X, Y) + (config['cost'] * (strat_config['min_available_clients'] - 1))
 
         avr['loss'].append(loss)
 
         rnd[0] += 1
         if rnd[0] == number_of_rounds:
-            save_history('server', avr, 'simulation_server')
+            save_history('server', avr, 'simulation')
 
         return loss, {}
 

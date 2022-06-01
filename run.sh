@@ -9,8 +9,8 @@ fi
 
 for i in `seq 0 $(($nb - 1))`; do
     echo "[INFO] Run | Starting client $i"
-    python tfclient.py $i > output/client$i.txt &
-    # python tfclient.py $i > /dev/null &
+    # python tfclient.py -c $i > output/client$i.txt &
+    python tfclient.py -c $i > /dev/null &
 done
 
 echo "[INFO] Run | Starting server"

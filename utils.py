@@ -11,7 +11,7 @@ from tensorflow.python.keras.models import load_model
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 
-def average_simulation(directory: str = 'simulation') -> Dict:
+def average_simulation(directory: str = 'simulation_history') -> Dict:
     '''
     Averages all the simulations in the simulation directory.
 
@@ -28,13 +28,15 @@ def average_simulation(directory: str = 'simulation') -> Dict:
     if not os.path.exists(directory):
         os.mkdir(directory)
 
-    d = [i for i in os.listdir(directory) if not i.startswith('.')]
+    path = f'{directory}/{os.listdir(directory)[-1]}'
+
+    d = [i for i in os.listdir(path) if not i.startswith('.')]
 
     for file in d:
         if file[0] == '.':
             continue
 
-        with open(os.path.join(directory, file), 'rb') as data_file:
+        with open(os.path.join(path, file), 'rb') as data_file:
             data = pickle.load(data_file)
 
         length = len(data)
@@ -54,7 +56,7 @@ def average_simulation(directory: str = 'simulation') -> Dict:
     return average
 
 
-def average_one(client: str, directory: str = 'simulation') -> Dict:
+def average_one(client: str, directory: str = 'simulation_history') -> Dict:
     '''
     Averages all the simulations for one given player in the simulation directory.
 
@@ -72,7 +74,9 @@ def average_one(client: str, directory: str = 'simulation') -> Dict:
     if not os.path.exists(directory):
         os.mkdir(directory)
 
-    with open(os.path.join(directory, client), 'rb') as data_file:
+    path = f'{directory}/{os.listdir(directory)[-1]}'
+
+    with open(os.path.join(path, client), 'rb') as data_file:
         data = pickle.load(data_file)
 
     length = len(data)
@@ -93,7 +97,7 @@ def average_one(client: str, directory: str = 'simulation') -> Dict:
 
 
 def average_server():
-    return average_one(client='server', directory='simulation_server')
+    return average_one(client='server', directory='simulation_server_history')
 
 
 def create_dataset(nb=10, mu=10, sigma=1):
@@ -178,6 +182,7 @@ def save_history(name: str, history: Dict, directory: str = 'simulation') -> Non
     Arguments:
       - name: name of the file
       - history: dictionary to save
+      - directory: directory to save the file in
 
     Returns none
     '''

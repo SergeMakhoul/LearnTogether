@@ -3,21 +3,27 @@
     "learning_rate": 0.07
   },
   "data": {
-    "number_of_samples": 10,
-    "mu": 10,
+    "number_of_samples": 12,
+    "mu": 50,
     "sigma": 2
   },
   "server": {
-    "number_of_rounds": 10,
+    "number_of_rounds": 50,
     "strategy": {
       "fraction_fit": 1,
       "fraction_eval": 1,
-      "min_available_clients": 5,
-      "min_eval_clients": 5,
-      "min_fit_clients": 5
+      "min_available_clients": 1,
+      "min_eval_clients": 1,
+      "min_fit_clients": 1
     },
     "fit_config": {
-      "local_epochs": 10
+      "local_epochs": 1
     }
+  },
+  "cost": 1,
+  "cost_function": {
+    "lambda": 0.1,
+    "s": 0.1,
+    "T": 10
   }
 }

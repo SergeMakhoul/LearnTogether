@@ -14,44 +14,33 @@ else
     nb_clients=3
 fi
 
-echo '[INFO] Simulate | Clearing old outputs and models'
-rm ./output/* >/dev/null 2>&1
-rm ./models/* >/dev/null 2>&1
-
-# echo '[INFO] Simulate | Clearing old simulations'
-# rm ./simulation/* >/dev/null 2>&1
-# rm ./simulation_server/* >/dev/null 2>&1
-
-if ((`ls ./simulation | wc -l` != 0)); then
-    # Getting the number of simulations already done
-    num_simulations=`ls ./simulation_history | wc -l`
-    # Creating the string for the directory extension to use
-    sim=simulation$(($num_simulations+1))
-
-    echo '[INFO] Simulate | Creating history directories'
-    mkdir ./simulation_history/$sim
-    mkdir ./simulation_server_history/$sim
-    mkdir ./dataset_history/$sim
-
-    echo '[INFO] Simulate | Moving client simulation'
-    mv ./simulation/* ./simulation_history/$sim
-
-    echo '[INFO] Simulate | Moving server simulation'
-    mv ./simulation_server/* ./simulation_server_history/$sim
-
-    echo '[INFO] Simulate | Moving dataset'
-    mv ./dataset/* ./dataset_history/$sim
+sim_num=`ls ./simulation_history | wc -l`
+if (($sim_num != 0)); then
+    mkdir ./archive/simulation_$(($sim_num+1))
 fi;
 
-# for i in `seq 1 $nb`; do
-    echo '[INFO] Simulate | Creating new dataset'
-    python dataset.py $nb_clients
+for i in `seq 1 $nb`; do
+    echo "[INFO] Simulate | Creating new dataset"
+    seed=$((1000+$i))
+    python dataset.py -c $nb_clients -s $seed
 
-    for f in simulation/*; do if [[ "$f" =~ client[[:digit:]]$ ]]; then mv "$f" "$f-$i"; fi; done
+    seed_path=./simulation_history/seed_$seed
+    mkdir $seed_path
 
-    echo '[INFO] Simulate | Running simulation'
-    # for j in `seq 1 10`; do
-    #     bash ./run.sh $nb_clients
-    # done
-    bash ./run.sh $nb_clients
-# done
+    for j in `seq 1 $nb_clients`; do
+        clients_path=$seed_path/clients_$j
+        mkdir $clients_path
+
+        rm ./output/* >/dev/null 2>&1
+        rm ./models/* >/dev/null 2>&1
+
+        echo "[INFO] Simulate | Running simulation $j"
+        bash ./run.sh $j
+
+        mv ./simulation/* $clients_path
+    done
+
+    dataset_path=./dataset_history/seed_$seed
+    mkdir $dataset_path
+    mv ./dataset/* $dataset_path
+done

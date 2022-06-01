@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import textwrap
+from argparse import ArgumentParser
 from typing import Dict, Tuple, Union
 
 import flwr as fl
@@ -127,14 +128,16 @@ class TFclient(fl.client.NumPyClient):
 
 
 if __name__ == '__main__':
+    parser = ArgumentParser(description='Flower client.')
+    parser.add_argument(
+        '-c', '--client', default=0, help='the specific number client. if none is specified, the client will generate a new dataset to use.', type=int)
+    args = parser.parse_args()
+
     with open('config.json', 'r') as f:
         config = json.load(f)
 
-    n = 0
     if len(sys.argv) > 1:
-        n = int(sys.argv[1])
-        print(n)
-        data = pd.read_csv(f'dataset/dataset{n}.csv')
+        data = pd.read_csv(f'dataset/dataset{args.client}.csv')
         data = data.drop(data.columns[[0]], axis=1)
         data = data.drop(0)
         Y = data['Y']
@@ -147,5 +150,5 @@ if __name__ == '__main__':
     # (x_train, x_test, y_train, y_test) = train_test_split(
     #     X.to_numpy(), Y.to_numpy(), train_size=0.8)
 
-    client = TFclient(X.to_numpy(), Y.to_numpy(), num=n)
+    client = TFclient(X.to_numpy(), Y.to_numpy(), num=args.client)
     fl.client.start_numpy_client('localhost:8080', client=client)

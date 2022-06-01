@@ -1,5 +1,6 @@
 import json
 import sys
+from argparse import ArgumentParser
 
 import numpy as np
 import pandas as pd
@@ -7,17 +8,20 @@ import pandas as pd
 from utils import create_dataset
 
 if __name__ == '__main__':
+    parser = ArgumentParser(
+        description='Create a dataset and save it into csv files.')
+    parser.add_argument('-s', '--seed', default=1234,
+                        help='seed for data generation', type=int)
+    parser.add_argument('-c', '--clients', default=10,
+                        help='number of clients to generate data for', type=int)
+    args = parser.parse_args()
+
     with open('config.json', 'r') as input:
         config = json.load(input)
 
     data_config = config['data']
 
-    if len(sys.argv) > 1:
-        n = int(sys.argv[1])
-    else:
-        n = 10
-
-    np.random.seed(seed=1234)
+    np.random.seed(seed=args.seed)
 
     # Creating the data for the server
     # We create the server's dataset before the clients to ensure
@@ -35,7 +39,7 @@ if __name__ == '__main__':
 
     # Creating the data for the clients
     print('[INFO] Dataset | Creating client datasets')
-    for i in range(n):
+    for i in range(args.clients):
         X, Y = create_dataset(
             nb=data_config['number_of_samples'],
             mu=data_config['mu']
