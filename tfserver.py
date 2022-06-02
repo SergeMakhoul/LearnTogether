@@ -1,12 +1,12 @@
 import json
 import os
+from argparse import ArgumentParser
 from typing import Dict, Optional, Tuple
 
 import flwr as fl
 import numpy as np
 import pandas as pd
 from flwr.common import Weights
-from flwr.server.client_manager import SimpleClientManager
 from flwr.server.server import Server
 from flwr.server.strategy import FedAvg
 from tensorflow.python.keras import Model, Sequential
@@ -14,9 +14,10 @@ from tensorflow.python.keras.initializers import initializers_v2
 from tensorflow.python.keras.layers import Dense, InputLayer
 from tensorflow.python.keras.optimizers import gradient_descent_v2
 
-from utils import create_dataset, save_history
+from utils import save_history
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 def get_eval_fn(model: Model, server: Server = None):
@@ -25,9 +26,9 @@ def get_eval_fn(model: Model, server: Server = None):
     '''
 
     # Load data and model here to avoid the overhead of doing it in `evaluate` itself
-    data = pd.read_csv(f'dataset/server.csv')
-    data = data.drop(data.columns[[0]], axis=1)
-    data = data.drop(0)
+    data = pd.read_csv(f'dataset/seed_{args.seed}/server.csv')
+    data.drop(data.columns[[0]], axis=1, inplace=True)
+    data.drop(0, inplace=True)
     Y = data['Y']
     X = data.drop('Y', axis=1)
     avr = {'loss': []}
@@ -52,7 +53,11 @@ def get_eval_fn(model: Model, server: Server = None):
 
         rnd[0] += 1
         if rnd[0] == number_of_rounds:
-            save_history('server', avr, 'simulation')
+            save_history(
+                name='server',
+                history=avr,
+                directory=args.dir
+            )
 
         return loss, {}
 
@@ -91,6 +96,28 @@ def evaluate_config(rnd: int):
 
 
 if __name__ == '__main__':
+    parser = ArgumentParser(description='Flower server.')
+    parser.add_argument(
+        '-s',
+        '--seed',
+        help='the seed for this server\'s dataset',
+        type=int
+    )
+    parser.add_argument(
+        '-d',
+        '--dir',
+        help='directory for the history',
+        type=str
+    )
+    parser.add_argument(
+        '-p',
+        '--port',
+        default=8080,
+        help='port to use for connection.',
+        type=int
+    )
+    args = parser.parse_args()
+
     with open('config.json', 'r') as f:
         config = json.load(f)
 
@@ -127,6 +154,6 @@ if __name__ == '__main__':
     number_of_rounds = config['server']['number_of_rounds']
 
     # Start Flower server for four rounds of federated learning
-    fl.server.start_server('localhost:8080',
+    fl.server.start_server(f'localhost:{args.port}',
                            config={'num_rounds': number_of_rounds},
                            strategy=strategy)

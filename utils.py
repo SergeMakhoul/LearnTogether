@@ -9,6 +9,7 @@ from tensorflow.python.keras import Model
 from tensorflow.python.keras.models import load_model
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 def average_simulation(directory: str = 'simulation_history') -> Dict:
@@ -174,7 +175,7 @@ def evaluate_models(x, y) -> Dict:
     return dict
 
 
-def save_history(name: str, history: Dict, directory: str = 'simulation') -> None:
+def save_history(name: str, history: Dict, directory: str) -> None:
     '''
     Saves a given history dictionary in the simulation directory
     by appending it to a list using pickle.
@@ -186,6 +187,9 @@ def save_history(name: str, history: Dict, directory: str = 'simulation') -> Non
 
     Returns none
     '''
+    if not os.path.exists(directory):
+        os.mkdir(directory)
+
     path: str = f'{directory}/{name}'
     data: List[Dict] = []
 

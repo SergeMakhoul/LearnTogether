@@ -1,5 +1,5 @@
 import json
-import sys
+import os
 from argparse import ArgumentParser
 
 import numpy as np
@@ -34,8 +34,13 @@ if __name__ == '__main__':
         mu=data_config['mu']
     )
 
+    DATASET_PATH = f'dataset/seed_{args.seed}'
+
+    if not os.path.exists(DATASET_PATH):
+        os.mkdir(DATASET_PATH)
+
     dataset = pd.concat([X, Y], axis=1, keys=['X', 'Y'])
-    dataset.to_csv(f'dataset/server.csv')
+    dataset.to_csv(f'{DATASET_PATH}/server.csv')
 
     # Creating the data for the clients
     print('[INFO] Dataset | Creating client datasets')
@@ -46,4 +51,4 @@ if __name__ == '__main__':
         )
 
         dataset = pd.concat([X, Y], axis=1, keys=['X', 'Y'])
-        dataset.to_csv(f'dataset/dataset{i}.csv')
+        dataset.to_csv(f'{DATASET_PATH}/dataset{i}.csv')

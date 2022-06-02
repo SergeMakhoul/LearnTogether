@@ -1,22 +1,20 @@
 import json
 import os
 import sys
-import textwrap
 from argparse import ArgumentParser
 from typing import Dict, Tuple, Union
 
 import flwr as fl
 import pandas as pd
 from numpy import ndarray
-from sklearn.model_selection import train_test_split
 from tensorflow.python.keras import Sequential
-from tensorflow.python.keras.callbacks import EarlyStopping
 from tensorflow.python.keras.layers import Dense, InputLayer
 from tensorflow.python.keras.optimizers import gradient_descent_v2
 
 from utils import create_dataset, save_history
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 class TFclient(fl.client.NumPyClient):
@@ -24,9 +22,10 @@ class TFclient(fl.client.NumPyClient):
             self,
             x_train: ndarray,
             y_train: ndarray,
+            dir: str,
             x_test: ndarray = None,
             y_test: ndarray = None,
-            num: int = 0
+            num: int = 0,
     ) -> None:
         self.model = Sequential([
             InputLayer(input_shape=(1,)),
@@ -42,6 +41,8 @@ class TFclient(fl.client.NumPyClient):
         self.x_train, self.y_train = x_train, y_train
         self.x_test, self.y_test = x_test, y_test
 
+        self.dir = dir
+
         self.name = f'client{num}'
 
         self.history = {
@@ -51,7 +52,11 @@ class TFclient(fl.client.NumPyClient):
         }
 
     def __save_history(self):
-        save_history(self.name, self.history)
+        save_history(
+            name=self.name,
+            history=self.history,
+            directory=self.dir
+        )
 
     def fit(self, parameters, config: Dict[str, Union[bool, bytes, float, int, str]])\
             -> Union[Tuple[any, any or float], int, Dict]:
@@ -130,16 +135,41 @@ class TFclient(fl.client.NumPyClient):
 if __name__ == '__main__':
     parser = ArgumentParser(description='Flower client.')
     parser.add_argument(
-        '-c', '--client', default=0, help='the specific number client. if none is specified, the client will generate a new dataset to use.', type=int)
+        '-s',
+        '--seed',
+        help='the seed for this client\'s dataset',
+        type=int
+    )
+    parser.add_argument(
+        '-d',
+        '--dir',
+        help='directory for the history',
+        type=str
+    )
+    parser.add_argument(
+        '-c',
+        '--client',
+        default=0,
+        help='the specific number client. if none is specified, the client will generate a new dataset to use.',
+        type=int
+    )
+    parser.add_argument(
+        '-p',
+        '--port',
+        default=8080,
+        help='port to use for connection.',
+        type=int
+    )
     args = parser.parse_args()
 
     with open('config.json', 'r') as f:
         config = json.load(f)
 
     if len(sys.argv) > 1:
-        data = pd.read_csv(f'dataset/dataset{args.client}.csv')
-        data = data.drop(data.columns[[0]], axis=1)
-        data = data.drop(0)
+        data = pd.read_csv(
+            f'dataset/seed_{args.seed}/dataset{args.client}.csv')
+        data.drop(data.columns[[0]], axis=1, inplace=True)
+        data.drop(0, inplace=True)
         Y = data['Y']
         X = data.drop('Y', axis=1)
         print(X)
@@ -150,5 +180,11 @@ if __name__ == '__main__':
     # (x_train, x_test, y_train, y_test) = train_test_split(
     #     X.to_numpy(), Y.to_numpy(), train_size=0.8)
 
-    client = TFclient(X.to_numpy(), Y.to_numpy(), num=args.client)
-    fl.client.start_numpy_client('localhost:8080', client=client)
+    client = TFclient(
+        x_train=X.to_numpy(),
+        y_train=Y.to_numpy(),
+        dir=args.dir,
+        num=args.client
+    )
+
+    fl.client.start_numpy_client(f'localhost:{args.port}', client=client)
