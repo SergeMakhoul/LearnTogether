@@ -27,7 +27,7 @@ if __name__ == '__main__':
     # We create the server's dataset before the clients to ensure
     # that the server will have the same dataset every simulation
     # and not be related to the number of clients
-    print('[INFO] Dataset | Creating server dataset')
+    # print('[INFO] Dataset | Creating server dataset')
 
     X, Y = create_dataset(
         nb=1000,
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     dataset.to_csv(f'{DATASET_PATH}/server.csv')
 
     # Creating the data for the clients
-    print('[INFO] Dataset | Creating client datasets')
+    # print('[INFO] Dataset | Creating client datasets')
     for i in range(args.clients):
         X, Y = create_dataset(
             nb=data_config['number_of_samples'],
