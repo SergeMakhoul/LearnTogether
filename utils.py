@@ -2,14 +2,14 @@ import os
 import pickle
 from typing import Dict, List
 
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 import pandas as pd
 from numpy import sqrt
 from scipy import stats
 from tensorflow.python.keras import Model
 from tensorflow.python.keras.models import load_model
-
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 def average_simulation(directory: str = 'simulation_history') -> Dict:
@@ -173,6 +173,15 @@ def evaluate_models(x, y) -> Dict:
         dict[file] = model.evaluate(x, y)
 
     return dict
+
+
+def get_dataset(path: str):
+    data = pd.read_csv(path)
+    data.drop(data.columns[[0]], axis=1, inplace=True)
+    data.drop(0, inplace=True)
+    Y = data['Y']
+    X = data['X']
+    return (X, Y)
 
 
 def save_history(name: str, history: Dict, directory: str) -> None:

@@ -12,7 +12,7 @@ from tensorflow.python.keras.initializers import initializers_v2
 from tensorflow.python.keras.layers import Dense, InputLayer
 from tensorflow.python.keras.optimizers import gradient_descent_v2
 
-from utils import create_dataset, save_history
+from utils import create_dataset, get_dataset, save_history
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -166,14 +166,8 @@ if __name__ == '__main__':
         config = json.load(f)
 
     if len(sys.argv) > 1:
-        data = pd.read_csv(
+        X, Y = get_dataset(
             f'dataset/seed_{args.seed}/dataset{args.client}.csv')
-        data.drop(data.columns[[0]], axis=1, inplace=True)
-        data.drop(0, inplace=True)
-        Y = data['Y']
-        X = data.drop('Y', axis=1)
-        print(X)
-        print(Y)
     else:
         X, Y = create_dataset(100)
 

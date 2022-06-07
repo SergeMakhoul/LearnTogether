@@ -14,7 +14,7 @@ from tensorflow.python.keras.initializers import initializers_v2
 from tensorflow.python.keras.layers import Dense, InputLayer
 from tensorflow.python.keras.optimizers import gradient_descent_v2
 
-from utils import save_history
+from utils import get_dataset, save_history
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -26,11 +26,7 @@ def get_eval_fn(model: Model, server: Server = None):
     '''
 
     # Load data and model here to avoid the overhead of doing it in `evaluate` itself
-    data = pd.read_csv(f'dataset/seed_{args.seed}/server.csv')
-    data.drop(data.columns[[0]], axis=1, inplace=True)
-    data.drop(0, inplace=True)
-    Y = data['Y']
-    X = data.drop('Y', axis=1)
+    X, Y = get_dataset(f'dataset/seed_{args.seed}/server.csv')
     avr = {'loss': []}
     rnd = [0]
 
