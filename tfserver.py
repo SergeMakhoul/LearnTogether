@@ -39,12 +39,13 @@ def get_eval_fn(model: Model, server: Server = None):
         weights: Weights,
     ) -> Optional[Tuple[float, Dict[str, fl.common.Scalar]]]:
         model.set_weights(weights)
-        loss = model.evaluate(X, Y)\
-            + ((config['data']['mu'] / (config['data']['number_of_samples'] - 2)
-                - (config['data']['mu'] / (config['data']['number_of_samples'] -
-                   2) - config['data']['sigma'] ** 2) / config['cost_function']['T']
-                - config['data']['sigma'] ** 2) / np.exp(2 * config['cost_function']['lambda'] * config['cost_function']['s'] * config['cost_function']['T']))\
-            * np.exp(2 * config['cost_function']['lambda'] * config['cost_function']['s'] * strat_config['min_available_clients'])
+        loss = model.evaluate(X, Y)
+        # loss = model.evaluate(X, Y)\
+        #     + ((config['data']['mu'] / (config['data']['number_of_samples'] - 2)
+        #         - (config['data']['mu'] / (config['data']['number_of_samples'] -
+        #            2) - config['data']['sigma'] ** 2) / config['cost_function']['T']
+        #         - config['data']['sigma'] ** 2) / np.exp(2 * config['cost_function']['lambda'] * config['cost_function']['s'] * config['cost_function']['T']))\
+        #     * np.exp(2 * config['cost_function']['lambda'] * config['cost_function']['s'] * strat_config['min_available_clients'])
 
         # loss = model.evaluate(
         #     X, Y) + (config['cost'] * (strat_config['min_available_clients'] - 1))
@@ -153,7 +154,16 @@ if __name__ == '__main__':
 
     number_of_rounds = config['server']['number_of_rounds']
 
-    # Start Flower server for four rounds of federated learning
-    fl.server.start_server(f'localhost:{args.port}',
-                           config={'num_rounds': number_of_rounds},
-                           strategy=strategy)
+    no_err = False
+    nb_tries = 0
+    while not no_err and nb_tries < 10:
+        try:
+            fl.server.start_server(
+                f'localhost:{args.port}',
+                config={'num_rounds': number_of_rounds},
+                strategy=strategy
+            )
+            no_err = True
+        except:
+            nb_tries += 1
+            continue

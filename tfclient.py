@@ -8,6 +8,7 @@ import flwr as fl
 import pandas as pd
 from numpy import ndarray
 from tensorflow.python.keras import Sequential
+from tensorflow.python.keras.initializers import initializers_v2
 from tensorflow.python.keras.layers import Dense, InputLayer
 from tensorflow.python.keras.optimizers import gradient_descent_v2
 
@@ -29,7 +30,7 @@ class TFclient(fl.client.NumPyClient):
     ) -> None:
         self.model = Sequential([
             InputLayer(input_shape=(1,)),
-            Dense(1)
+            Dense(units=1, kernel_initializer=initializers_v2.Zeros())
         ])
 
         self.model.compile(
@@ -128,8 +129,7 @@ class TFclient(fl.client.NumPyClient):
         return loss, num_examples_test, {}
 
     def get_parameters(self):
-        raise Exception(
-            'Not implemented (server-side parameter initialization)')
+        return fl.common.weights_to_parameters(self.model.get_weights())
 
 
 if __name__ == '__main__':
@@ -187,4 +187,15 @@ if __name__ == '__main__':
         num=args.client
     )
 
-    fl.client.start_numpy_client(f'localhost:{args.port}', client=client)
+    no_err = False
+    nb_tries = 0
+    while not no_err and nb_tries < 10:
+        try:
+            fl.client.start_numpy_client(
+                f'localhost:{args.port}',
+                client=client
+            )
+            no_err = True
+        except:
+            nb_tries += 1
+            continue

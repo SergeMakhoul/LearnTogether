@@ -17,11 +17,12 @@ else
     port=8080
 fi
 
+tmp="simulation/seed_$seed"
+mkdir $tmp
+dir="$tmp/clients_$nb"
+mkdir $dir
+
 for i in `seq 0 $(($nb - 1))`; do
-    tmp="simulation/seed_$seed"
-    mkdir $tmp
-    dir="$tmp/clients_$nb"
-    mkdir $dir
     python tfclient.py -c $i -s $seed -p $port -d $dir > /dev/null &
 done
 
