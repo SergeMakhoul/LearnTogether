@@ -1,11 +1,26 @@
+import json
+from argparse import ArgumentParser
 from typing import Tuple
 
-import pandas as pd
+from pandas import DataFrame as df
 
-from utils import create_dataset
+from utils import create_dataset, get_dataset
 
 
-def calculate_parameters(x1: pd.DataFrame, x2: pd.DataFrame, y: pd.DataFrame) -> Tuple[float, float, float]:
+def linear_regression(x: df, y: df) -> Tuple[float, float]:
+    mx = x.mean()
+    my = y.mean()
+
+    ssx = ((x - mx)**2).sum()
+    sp = ((x - mx) * (y - my)).sum()
+
+    b = sp / ssx
+    a = my - b * mx
+
+    return (a, b)
+
+
+def multiple_regression(x1: df, x2: df, y: df) -> Tuple[float, float, float]:
     mx1 = x1.mean()[0]
     mx2 = x2.mean()[0]
     my = y.mean()
@@ -36,52 +51,55 @@ def calculate_parameters(x1: pd.DataFrame, x2: pd.DataFrame, y: pd.DataFrame) ->
 
 
 if __name__ == '__main__':
-    avr = []
-    nb = 10
-    mu = 200
-    for _ in range(1):
-        data = pd.read_csv(f'dataset/dataset0.csv')
-        data = data.drop(data.columns[[0]], axis=1)
-        data = data.drop(0)
-        y = data['Y']
-        x = data.drop('Y', axis=1)
-        # x, y = create_dataset(nb, mu)
-        # x = pd.DataFrame([
-        #     [-0.737513, 1.158807],
-        #     [1.709208, -0.977309],
-        #     [-0.363734, 0.031622],
-        #     [-1.906486, -0.730987],
-        #     [-0.191485, 0.686581],
-        #     [0.517718, -0.757618],
-        #     [0.224554, -0.413411],
-        #     [2.416377, -0.583175],
-        #     [0.881766, -1.392606],
-        #     [-0.400346, -0.308192]
-        # ])
+    parser = ArgumentParser(description='Flower client.')
+    parser.add_argument(
+        '-s',
+        '--seed',
+        default=1234,
+        help='the seed for the dataset',
+        type=int
+    )
+    parser.add_argument(
+        '-n',
+        '--num_of_clients',
+        default=1,
+        help='total number of clients to simulate',
+        type=int
+    )
+    args = parser.parse_args()
 
-        # y = pd.DataFrame([16.982345912775642, -5.605549871297961, 12.280438110508962, 13.539815722501146, -6.650178714917922,
-        #                  -7.023483784834454, 7.714626007844384, -3.878709595474202, 33.74824705433084, 15.713715047604907])
+    with open('config.json', 'r') as f:
+        config = json.load(f)
 
-        # print(x['X'])
+    weights = {'a': 0, 'b': 0}
 
-        x1 = pd.DataFrame(x['X'].values)
-        x2 = pd.DataFrame(x['X.1'].values)
+    for i in range(args.num_of_clients):
+        x, y = get_dataset(f'dataset/seed_{args.seed}/dataset{i}.csv')
 
-        (a, b1, b2) = calculate_parameters(x1, x2, y)
+        a, b = linear_regression(x, y)
 
-        x_test, y_test = create_dataset(nb, mu)
+        weights['a'] += a
+        weights['b'] += b
 
-        x1_test = pd.DataFrame(x_test[0].values)
-        x2_test = pd.DataFrame(x_test[1].values)
+    weights['a'] /= args.num_of_clients
+    weights['b'] /= args.num_of_clients
 
-        # y_pred = x1_test * b1 + x2_test * b2 + a
-        y_pred = x1 * b1 + x2 * b2 + a
+    a = weights['a']
+    b = weights['b']
 
-        mse = ((((y_pred - y) ** 2).sum()) / y.size)
-        avr.append(mse)
+    x_test, y_test = get_dataset(f'dataset/seed_{args.seed}/server.csv')
 
-        print(f'y = {b1} * X1 + {b2} * X2 + {a}')
-        print(mse)
+    y_pred = x_test * b + a
 
-    print(
-        f'Average MSE with parameters mu={mu} and nb={nb} was: {avr}')
+    mse = ((((y_pred - y_test) ** 2).sum()) / y_test.size)
+
+    print(f'seed = {args.seed}')
+    print(f'num_of_clients = {args.num_of_clients}')
+    print(f'y = {b} * X + {a}')
+    print(f'mse = {mse}')
+    print('###############')
+
+    # mu = config['data']['mu']
+    # nb = config['data']['number_of_samples']
+
+    # print(f'Average MSE with parameters mu={mu} and nb={nb} was: {mse}')
