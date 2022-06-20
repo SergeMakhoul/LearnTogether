@@ -101,7 +101,7 @@ def average_server():
     return average_one(client='server', directory='simulation_server_history')
 
 
-def create_dataset(nb=10, mu=10, sigma=1):
+def create_dataset(nb: int = 10, mu: int = 10, sigma: int = 1, mean: float or None = None):
     '''
     Creates a linear regression dataset based on a mean distribution and on an error distribution.
     X values are drawn from the player's distribution and Y is noisily drawn following:
@@ -124,7 +124,7 @@ def create_dataset(nb=10, mu=10, sigma=1):
     means_dist = stats.norm(loc=0, scale=sigma)
 
     # means = pd.DataFrame([dist.rvs() for dist in params_dists]).T
-    means = pd.DataFrame([means_dist.rvs()]).T
+    means = pd.DataFrame([mean if mean is not None else means_dist.rvs()]).T
 
     variance_dist = stats.beta(a=8, b=2, scale=(50/4)*(mu/10))
 
@@ -145,7 +145,7 @@ def create_dataset(nb=10, mu=10, sigma=1):
         sqrt(mu)
     ).rvs() for j in range(nb)])
 
-    return (X, Y)
+    return (X, Y, means[0][0])
 
 
 def evaluate_models(x, y) -> Dict:
@@ -218,6 +218,7 @@ def save_history(name: str, history: Dict, directory: str) -> None:
 
 
 if __name__ == '__main__':
-    # x, y = create_dataset(nb=10, mu=10)
-    # print(x, y, sep='\n\n')
-    average_simulation()
+    x, y, z = create_dataset(nb=100, mu=10)
+    # print(x)
+    # print(y)
+    # print(z)
