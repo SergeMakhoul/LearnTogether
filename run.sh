@@ -26,7 +26,7 @@ for i in `seq 0 $(($nb - 1))`; do
     python tfclient.py -c $i -s $seed -p $port -d $dir > /dev/null &
 done
 
-python tfserver.py -s $seed -p $port -d $dir > /dev/null &
+python tfserver.py -c $(($i+1)) -s $seed -p $port -d $dir > /dev/null &
 
 trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM
 wait

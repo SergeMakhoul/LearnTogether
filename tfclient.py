@@ -4,6 +4,9 @@ import sys
 from argparse import ArgumentParser
 from typing import Dict, Tuple, Union
 
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 import flwr as fl
 import pandas as pd
 from numpy import ndarray
@@ -13,9 +16,6 @@ from tensorflow.python.keras.layers import Dense, InputLayer
 from tensorflow.python.keras.optimizers import gradient_descent_v2
 
 from utils import create_dataset, get_dataset, save_history
-
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 class TFclient(fl.client.NumPyClient):
@@ -48,7 +48,7 @@ class TFclient(fl.client.NumPyClient):
 
         self.history = {
             'loss': [],
-            'val_loss': [],
+            'test_loss': [],
             'weights': []
         }
 
@@ -59,72 +59,66 @@ class TFclient(fl.client.NumPyClient):
             directory=self.dir
         )
 
+    def __save_model(self):
+        self.model.save(f'models/model_{self.name}.h5')
+
     def fit(self, parameters, config: Dict[str, Union[bool, bytes, float, int, str]])\
             -> Union[Tuple[any, any or float], int, Dict]:
         self.model.set_weights(parameters)
 
-        batch_size: int = config['batch_size'] if 'batch_size' in config.keys(
-        ) else 32
-        epochs: int = config['local_epochs'] if 'local_epochs' in config.keys(
-        ) else 1
+        batch_size = config['batch_size'] if 'batch_size' in config.keys() else 32
+        epochs = config['local_epochs'] if 'local_epochs' in config.keys() else 1
 
         history = self.model.fit(
             x=self.x_train,
             y=self.y_train,
-            epochs=epochs,
-            # callbacks=[EarlyStopping(
-            #     monitor='loss', patience=5, restore_best_weights=True)]
+            epochs=epochs
         )
 
-        # self.model.save(f'models/model_{self.name}.h5')
+        # self.__save_model()
 
         parameters_prime: list[ndarray] = self.model.get_weights()
 
-        # print(textwrap.dedent(f'''
-        #     ****************
-
-        #     {parameters_prime}
-
-        #     {history.history}
-
-        #     ****************
-        # '''))
-
         results = {
-            'loss': history.history['loss'][0],
-            # 'val_loss': history.history['val_loss'][0],
+            'loss': history.history['loss'][0]
         }
 
-        self.history['loss'].extend(history.history['loss'])
-        # self.history['val_loss'].extend(history.history['val_loss'])
+        self.history['loss'].extend(
+            history.history['loss']
+        )
+
         self.history['weights'].append(
-            [parameters_prime[0].tolist(), parameters_prime[1].tolist()])
-
-        if config['final_round']:
-            self.__save_history()
-
-        # TODO see how to evaluate and save it
+            [parameters_prime[0].tolist(), parameters_prime[1].tolist()]
+        )
 
         return parameters_prime, len(self.x_train), results
 
     def evaluate(self, parameters, config: Dict[str, Union[bool, bytes, float, int, str]])\
             -> Union[tuple or any, int, Dict[str, float or any or tuple]]:
+
         self.model.set_weights(parameters)
 
-        if not self.x_test or not self.y_test:
+        if self.x_test is None or self.y_test is None:
             raise Exception('Test variables are undefined or incomplete.')
 
-        # Get config values
         if 'val_steps' in config.keys():
             steps: int = config['val_steps']
         else:
             steps = 5
 
-        # Evaluate global model parameters on the local test data and return results
         loss = self.model.evaluate(
-            self.x_test, self.y_test, len(self.x_test) // steps, steps=steps)
+            x = self.x_test,
+            y = self.y_test,
+            batch_size = len(self.x_test) // steps,
+            steps=steps
+        )
 
         num_examples_test = len(self.x_test)
+
+        self.history['test_loss'].append(loss)
+
+        if config['final_round']:
+            self.__save_history()
 
         return loss, num_examples_test, {}
 
@@ -133,7 +127,7 @@ class TFclient(fl.client.NumPyClient):
 
 
 if __name__ == '__main__':
-    parser = ArgumentParser(description='Flower client.')
+    parser = ArgumentParser(description='Flower client')
     parser.add_argument(
         '-s',
         '--seed',
@@ -167,23 +161,26 @@ if __name__ == '__main__':
 
     if len(sys.argv) > 1:
         X, Y = get_dataset(
-            f'dataset/seed_{args.seed}/dataset{args.client}.csv')
+            path = f'dataset/seed_{args.seed}/client_{args.client}/dataset.csv'
+        )
+        X_test, Y_test = get_dataset(
+            path = f'dataset/seed_{args.seed}/client_{args.client}/test.csv'
+        )
     else:
         X, Y = create_dataset(100)
-
-    # (x_train, x_test, y_train, y_test) = train_test_split(
-    #     X.to_numpy(), Y.to_numpy(), train_size=0.8)
 
     client = TFclient(
         x_train=X.to_numpy(),
         y_train=Y.to_numpy(),
+        x_test=X_test.to_numpy(),
+        y_test=Y_test.to_numpy(),
         dir=args.dir,
         num=args.client
     )
 
     no_err = False
     nb_tries = 0
-    while not no_err and nb_tries < 10:
+    while not no_err:
         try:
             fl.client.start_numpy_client(
                 f'localhost:{args.port}',
@@ -191,5 +188,5 @@ if __name__ == '__main__':
             )
             no_err = True
         except:
-            nb_tries += 1
+            # nb_tries += 1
             continue
